@@ -17,7 +17,20 @@ def main():
     
     cs = pyrax.cloudservers
     
-    print cs.servers.list()
+    servers = cs.servers.list()
+    
+    srv_dict = {}
+    
+    for pos, srv in enumerate(servers):
+        print "%s: %s" % (pos, srv.name)
+        srv_dict[str(pos)] = srv.id
+        
+    choice = None
+    
+    while choice not in srv_dict:
+        if choice is not None:
+            print "  ** Not a valid server choice ** "
+        choice = raw_input("Choose a server to clone: ")
 
 if __name__ == '__main__':
     main()
