@@ -87,7 +87,7 @@ def main():
             r = requests.get("{}/servers/{}".format(endpoint, server['id']), headers = headers)
             detail = r.json()['server']
             servers[name] = dict(server, **detail)
-            if detail['status'] = 'ERROR':
+            if detail['status'] == 'ERROR':
                 progress = detail['status']
                 servers[name]['progress'] = progress
             else:
