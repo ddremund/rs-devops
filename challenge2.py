@@ -4,6 +4,7 @@ import pyrax
 import argparse
 import os
 import time
+import sys
 
 def chooseServer(cs, prompt):
 
@@ -24,16 +25,21 @@ def chooseServer(cs, prompt):
 
     return srv_dict[choice]
 
-def chooseFlavor(cs, prompt, minimum_ram):
+def chooseFlavor(cs, prompt, default_id=2):
 
     flavors = cs.flavors.list()
 
     flavors_dict = {}
+    minimum_ram = 0
 
     print "Valid flavors: \n"
 
-    for flavor in flavors
-        if flavor.ram < minimum_ram
+    for flavor in flavors:
+        if flavor.id == default_id:
+            minimum_ram = flavor.ram
+
+    for flavor in flavors:
+        if flavor.ram < minimum_ram:
             continue
         flavors_dict[str(flavor.id)] = flavor
         print "ID:", flavor.id
@@ -45,7 +51,7 @@ def chooseFlavor(cs, prompt, minimum_ram):
 
     choice = None
 
-    while choice not in flavors_dict and flavors_dict[choice].ram < minimum_ram
+    while choice not in flavors_dict:
         if choice is not None:
             print " ** Not a valid flavor ID ** "
         choice = raw_input(prompt)
@@ -58,7 +64,7 @@ def main():
     
     def_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
     creds_file = raw_input("Location of credentials file [{}]? ".format(def_creds_file))
-    if (creds_file == ""):
+    if creds_file == "":
         creds_file = def_creds_file
     else:
         creds_file = os.path.expanduser(creds_file)
@@ -80,7 +86,9 @@ def main():
     if (clone_name == ""):
         clone_name = def_clone_name
 
-    clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor.ram)
+    print base_server.flavor
+
+    clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
 
     print "Creating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
     try:
@@ -94,10 +102,10 @@ def main():
         time.sleep(5)
         imgs = cs.images.list()
         for img in imgs:
-            if (img.id == img_id):
+            if img.id == img_id:
                 print "{} - {}%% complete".format(img.name, img.progress)
-        if (img.progress > 99):
-            complete = True
+                if img.progress > 99:
+                    complete = True
 
     print "Image created.\n"
 
@@ -109,15 +117,18 @@ def main():
         sys.exit(1)
 
     complete = False
-    while(not complete)
+    while(not complete):
         time.sleep(5)
         servers = cs.servers.list()
         for server in servers:
             if (server.id == clone.id):
-                print "{} - {}%% complete".format(server.name, server.progress)
-        if (server.progress > 99):
+                print "{} - {}% complete".format(server.name, server.progress)
+        if server.progress > 99:
             clone = server
             complete = True
+        if server.status == 'ERROR':
+            print "Error in clone creation."
+            sys.exit(1)
 
     print "Clone server created.\n"
     print "Name:", clone.name
