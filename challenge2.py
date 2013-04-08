@@ -103,8 +103,28 @@ def main():
 
     print "Creating server \"{}\" from \"{}\"...".format(clone_name, image_name)
     try:
+        clone = cs.servers.create(clone_name, img_id, clone_flavor.id)
+    except Exception, e:
+        print "Error in clone creation: {}".format(e)
+        sys.exit(1)
 
+    complete = False
+    while(not complete)
+        time.sleep(5)
+        servers = cs.servers.list()
+        for server in servers:
+            if (server.id == clone.id):
+                print "{} - {}%% complete".format(server.name, server.progress)
+        if (server.progress > 99):
+            clone = server
+            complete = True
 
+    print "Clone server created.\n"
+    print "Name:", clone.name
+    print "ID:", clone.id
+    print "Status:", clone.status
+    print "Admin Password:", clone.adminPass
+    print "Networks", clone.networks
 
 if __name__ == '__main__':
     main()
