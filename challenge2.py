@@ -82,9 +82,14 @@ def main():
         creds_file = def_creds_file
     else:
         creds_file = os.path.expanduser(creds_file)
+
+    region = None
+    print "Region?"
+    while region not in ["DFW", "ORD"]:
+        region = raw_input("(DFW | ORD): ")
     
     pyrax.set_credential_file(creds_file)
-    cs = pyrax.cloudservers
+    cs = pyrax.connect_to_cloudservers(region = region)
 
     base_server = chooseServer(cs, "Choose a server to clone: ")
     print
