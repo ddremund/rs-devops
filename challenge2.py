@@ -44,12 +44,18 @@ def main():
     image_name = raw_input("Enter a name for the image [{}]: ".format(def_image_name))
     if (image_name == ""):
         image_name = def_image_name
+    print
+
+    def_clone_name = "{}{}".format(base_server.name, "-clone")
+    clone_name = raw_input("Enter a name for the clone [{}]:".format(def_clone_name))
+    if (clone_name == ""):
+        clone_name = def_clone_name
 
     print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
     try:
         img_id = cs.servers.create_image(base_server.id, image_name)
     except Exception, e:
-        print e
+        print "Error in image creation: {}".format(e)
         sys.exit(1) 
 
     complete = False
