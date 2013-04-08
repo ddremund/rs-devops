@@ -90,7 +90,7 @@ def main():
 
     clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
 
-    print "Creating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
+    print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
     try:
         img_id = cs.servers.create_image(base_server.id, image_name)
     except Exception, e:
@@ -99,11 +99,11 @@ def main():
 
     complete = False
     while(not complete):
-        time.sleep(5)
+        time.sleep(10)
         imgs = cs.images.list()
         for img in imgs:
             if img.id == img_id:
-                print "{} - {}%% complete".format(img.name, img.progress)
+                print "{} - {}% complete".format(img.name, img.progress)
                 if img.progress > 99:
                     complete = True
 
@@ -116,25 +116,27 @@ def main():
         print "Error in clone creation: {}".format(e)
         sys.exit(1)
 
+    adminPass = clone.adminPass
+
     complete = False
     while(not complete):
-        time.sleep(5)
+        time.sleep(10)
         servers = cs.servers.list()
         for server in servers:
             if (server.id == clone.id):
                 print "{} - {}% complete".format(server.name, server.progress)
-        if server.progress > 99:
-            clone = server
-            complete = True
-        if server.status == 'ERROR':
-            print "Error in clone creation."
-            sys.exit(1)
+                if server.status == 'ACTIVE':
+                    clone = server
+                    complete = True
+                if server.status == 'ERROR':
+                    print "Error in clone creation."
+                    sys.exit(1)
 
-    print "Clone server created.\n"
+    print "\nClone server created.\n"
     print "Name:", clone.name
     print "ID:", clone.id
     print "Status:", clone.status
-    print "Admin Password:", clone.adminPass
+    print "Admin Password:", adminPass
     print "Networks", clone.networks
 
 if __name__ == '__main__':
