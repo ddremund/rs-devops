@@ -100,8 +100,6 @@ def main():
     if (clone_name == ""):
         clone_name = def_clone_name
 
-    print base_server.flavor
-
     clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
 
     print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
