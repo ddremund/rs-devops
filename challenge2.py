@@ -3,6 +3,7 @@
 import pyrax
 import argparse
 import os
+import time
 
 def chooseServer(cs, prompt):
 
@@ -12,7 +13,7 @@ def chooseServer(cs, prompt):
     
     for pos, srv in enumerate(servers):
         print "{}: {}".format(pos, srv.name)
-        srv_dict[str(pos)] = (srv.id, srv.name)
+        srv_dict[str(pos)] = srv
         
     choice = None
     
@@ -26,30 +27,43 @@ def chooseServer(cs, prompt):
 
 def main():
     
-
-    creds_file = raw_input("Location of credentials file [~./rackspace_cloud_credentials]? ")
+    def_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
+    creds_file = raw_input("Location of credentials file [{}]? ".format(def_creds_file))
     if (creds_file == ""):
-        creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
+        creds_file = def_creds_file
     else:
         creds_file = os.path.expanduser(creds_file)
-
-    print creds_file
     
     pyrax.set_credential_file(creds_file)
-    
     cs = pyrax.cloudservers
 
     base_server = chooseServer(cs, "Choose a server to clone: ")
-
-    base_id = base_server[0]
     print
 
-    def_image_name = "{}{}".format(base_server[1], "-image")
+    def_image_name = "{}{}".format(base_server.name, "-image")
     image_name = raw_input("Enter a name for the image [{}]: ".format(def_image_name))
     if (image_name == ""):
         image_name = def_image_name
 
-    print "Image Name: {}".format(image_name)
+    print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
+    try:
+        img_id = cs.servers.create_image(base_server.id, image_name)
+    except Exception, e:
+        print e
+        sys.exit(1) 
+
+    complete = False
+    while(not complete):
+        time.sleep(5)
+        imgs = cs.images.list()
+        for img in imgs:
+            if (img.id == img_id):
+                print "{} - {}%% complete".format(img.name, img.progress)
+        if (img.progress > 99):
+            complete = True
+
+    print "Image created."
+
 
 if __name__ == '__main__':
     main()
