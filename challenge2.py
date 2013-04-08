@@ -20,9 +20,38 @@ def chooseServer(cs, prompt):
     while choice not in srv_dict:
         if choice is not None:
             print "  ** Not a valid server choice ** "
-        choice = raw_input("Choose a server to clone: ")
+        choice = raw_input(prompt)
 
     return srv_dict[choice]
+
+def chooseFlavor(cs, prompt, minimum_ram):
+
+    flavors = cs.flavors.list()
+
+    flavors_dict = {}
+
+    print "Valid flavors: \n"
+
+    for flavor in flavors
+        if flavor.ram < minimum_ram
+            continue
+        flavors_dict[str(flavor.id)] = flavor
+        print "ID:", flavor.id
+        print "Name:", flavor.name
+        print "RAM:", flavor.ram
+        print "Disk:", flavor.disk
+        print "vCPUs:", flavor.vcpus
+        print
+
+    choice = None
+
+    while choice not in flavors_dict and flavors_dict[choice].ram < minimum_ram
+        if choice is not None:
+            print " ** Not a valid flavor ID ** "
+        choice = raw_input(prompt)
+
+    return flavors_dict[choice]
+
 
 
 def main():
@@ -51,7 +80,9 @@ def main():
     if (clone_name == ""):
         clone_name = def_clone_name
 
-    print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
+    clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor.ram)
+
+    print "Creating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
     try:
         img_id = cs.servers.create_image(base_server.id, image_name)
     except Exception, e:
@@ -68,7 +99,11 @@ def main():
         if (img.progress > 99):
             complete = True
 
-    print "Image created."
+    print "Image created.\n"
+
+    print "Creating server \"{}\" from \"{}\"...".format(clone_name, image_name)
+    try:
+
 
 
 if __name__ == '__main__':
