@@ -46,7 +46,7 @@ def chooseFlavor(cs, prompt, default_id=2):
     flavors_dict = {}
     minimum_ram = 0
 
-    print "Valid flavors: \n"
+    print "\nValid flavors: \n"
 
     for flavor in flavors:
         if flavor.id == default_id:
