@@ -27,7 +27,7 @@ def main():
     srv_dict = {}
     
     for pos, srv in enumerate(servers):
-        print "%s: %s".format(pos, srv.name)
+        print "{}: {}".format(pos, srv.name)
         srv_dict[str(pos)] = (srv.id, srv.name)
         
     choice = None
@@ -40,12 +40,12 @@ def main():
     base_id = srv_dict[choice][0]
     print
 
-    def_image_name = "%s%s".format(srv_dict[choice][1], "-image")
-    image_name = raw_input("Enter a name for the image: [%s]".format(def_image_name))
+    def_image_name = "{}{}".format(srv_dict[choice][1], "-image")
+    image_name = raw_input("Enter a name for the image [{}]: ".format(def_image_name))
     if (image_name == ""):
-        image_name = def_imgae_name
+        image_name = def_image_name
 
-    print "Image Name: %s".format(image_name)
+    print "Image Name: {}".format(image_name)
 
 if __name__ == '__main__':
     main()
