@@ -20,7 +20,7 @@ import os
 import time
 import sys
 
-def chooseServer(cs, prompt):
+def choose_server(cs, prompt):
 
     servers = cs.servers.list()
     
@@ -39,7 +39,7 @@ def chooseServer(cs, prompt):
 
     return srv_dict[choice]
 
-def chooseFlavor(cs, prompt, default_id=2):
+def choose_flavor(cs, prompt, default_id=2):
 
     flavors = cs.flavors.list()
 
@@ -91,7 +91,7 @@ def main():
     pyrax.set_credential_file(creds_file)
     cs = pyrax.connect_to_cloudservers(region = region)
 
-    base_server = chooseServer(cs, "Choose a server to clone: ")
+    base_server = choose_server(cs, "Choose a server to clone: ")
     print
 
     def_image_name = "{}{}".format(base_server.name, "-image")
@@ -105,7 +105,7 @@ def main():
     if (clone_name == ""):
         clone_name = def_clone_name
 
-    clone_flavor = chooseFlavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
+    clone_flavor = choose_flavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
 
     print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
     try:
