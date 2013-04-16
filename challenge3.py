@@ -21,6 +21,7 @@ import sys
 
 def main():
 
+	parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--container', help="Name of container to use/create.")
     parser.add_argument('-d', '--dir', default=os.path.dirname(os.path.realpath(__file__)), help="Directory to upload; defaults to the current directory.")
 
