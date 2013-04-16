@@ -14,6 +14,20 @@
    # See the License for the specific language governing permissions and
    # limitations under the License.
 
-   import pyrax
+import pyrax
+import argparse
+import os
+import sys
 
-   
+def main():
+
+	parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--container', help="Name of container to use/create.")
+    parser.add_argument('-d', '--dir', default=os.path.dirname(os.path.realpath(__file__)), help="Directory to upload; defaults to the current directory.")
+
+    args = parser.parse_args()
+
+    
+
+if __name__ == '__main__':
+    main()
