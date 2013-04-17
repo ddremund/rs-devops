@@ -19,6 +19,7 @@ import argparse
 import os
 import sys
 
+
 def main():
 
     default_creds_file = os.path.join(os.path.expanduser("~"), 
@@ -39,12 +40,25 @@ def main():
     if args.container == "":
     	args.container = pyrax.utils.random_name(8, ascii_only = True)
 
-    creds_file = os.path.expanduser(args.creds_file)
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
     cf = pyrax.connect_to_cloudfiles(args.region)
 
     print "Using container \"{}\"".format(args.container)
+
+    container = None
+    try:
+        container = cf.get_container(args.container)
+    except:
+        container = cf.create_container(args.container)
+
+    args.dir = os.path.abspath(os.path.expanduser(args.dir))
+    if not os.path.isdir(args.dir):
+        print "{} is not a directory.".format(args.dir)
+        sys.exit(1)
+
+
 
 if __name__ == '__main__':
     main()
