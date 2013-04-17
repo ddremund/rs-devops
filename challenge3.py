@@ -53,11 +53,21 @@ def main():
     except:
         container = cf.create_container(args.container)
 
-    args.dir = os.path.abspath(os.path.expanduser(args.dir))
-    if not os.path.isdir(args.dir):
-        print "{} is not a directory.".format(args.dir)
+    directory = os.path.abspath(os.path.expanduser(args.dir))
+    if not os.path.isdir(directory):
+        print "{} is not a directory.".format(directory)
         sys.exit(1)
 
+    for item in os.listdir(directory):
+        full_path = os.path.join(directory, item)
+        if os.path.isfile(full_path):
+            chksum = pyrax.utils.get_checksum(full_path)
+            try:
+                file_object = cf.upload_file(container, full_path, etag=chksum)
+            except Exception, e:
+                print "{} - Upload failed - {}".format(item, e)
+            else:
+                print "{} - Upload succeeded - checksum {}".format(item, file_object.etag)
 
 
 if __name__ == '__main__':
