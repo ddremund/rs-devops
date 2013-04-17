@@ -30,7 +30,7 @@ def main():
     args = parser.parse_args()
 
     if args.container == "":
-    	args.container = pyrax.utils.random_name(8)
+    	args.container = pyrax.utils.random_name(8, ascii_only = True)
 
     creds_file = os.path.expanduser(args.creds_file)
     pyrax.set_credential_file(creds_file)
