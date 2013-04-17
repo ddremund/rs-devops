@@ -19,10 +19,53 @@ import argparse
 import os
 import sys
 
-
 def main():
 
+    default_creds_file = os.path.join(os.path.expanduser("~"), 
+    	".rackspace_cloud_credentials")
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('fqdn', metavar ='FQDN', help = "FQDN for A record")
+    parser.add_argument('ip', metavar = 'IP', help = "Target IP address")
+    parser.add_argument('domain', metavar = 'DOMAIN', 
+    	help = "Domain in which to create the record")
+    parser.add_argument('-t', '--ttl', type = int, default = 300, 
+    	help = "Time to Live for A record; default 300")
+    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+        help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
+    args = parser.parse_args()
+
+    print args
+
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
+    pyrax.set_credential_file(creds_file)
+
+    dns = pyrax.cloud_dns
+
+    try:
+    	domain = dns.find(name=args.domain)
+    except pyrax.exceptions.NotFound:
+    	answer = raw_input("The domain '%s' was not found.  Do you want to "
+    		"create it? [Y/N]".format(args.domain))
+    	if not answer.lower().startswith("y"):
+    		sys.exit(1)
+    	email = raw_input("Email address for domain? ")
+    	try:
+    		domain = dns.create(name=args.domain, emailAddress = email,
+    			ttl = 300, comment = "created via API script")
+    	except pyrax.exceptions.DomainCreationFailed, e:
+    		print "Domain creation failed:", e
+    		sys.exit(1)
+    	print "Domain Created:", domain
+
+    a_rec = {"type": "A",
+    		"name": args.fqdn,
+    		"data": args.ip,
+    		"ttl": args.ttl}
+
+    recs = domain.add_records([a_rec])
+    print recs
 
 if __name__ == '__main__':
     main()
