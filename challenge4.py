@@ -44,7 +44,7 @@ def main():
     dns = pyrax.cloud_dns
 
     try:
-    	domain = dns.find(name=args.domain)
+    	domain = dns.find(name = args.domain)
     except pyrax.exceptions.NotFound:
     	answer = raw_input("The domain '%s' was not found.  Do you want to "
     		"create it? [Y/N]".format(args.domain))
@@ -52,7 +52,7 @@ def main():
     		sys.exit(1)
     	email = raw_input("Email address for domain? ")
     	try:
-    		domain = dns.create(name=args.domain, emailAddress = email,
+    		domain = dns.create(name = args.domain, emailAddress = email,
     			ttl = 300, comment = "created via API script")
     	except pyrax.exceptions.DomainCreationFailed, e:
     		print "Domain creation failed:", e
