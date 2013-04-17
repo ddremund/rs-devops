@@ -21,12 +21,13 @@ import sys
 
 def main():
 
+    default_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--container', default = "", help="Name of container to use/create; random name is used if unspecified.")
-    parser.add_argument('-r', '--region', choices=['DFW', 'ORD', 'LON'], default='DFW', help="Name of region; defaults to DFW.")
+    parser.add_argument('-r', '--region', required = True, choices=['DFW', 'ORD', 'LON'], help="Name of region; defaults to DFW.")
     parser.add_argument('-d', '--dir', default = os.path.dirname(os.path.realpath(__file__)), help="Directory to upload; defaults to the current directory.")
-    parser.add_argument('-f', '--creds_file', default = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials"), help = "Location of credentials file; defaults to ~/.rackspace_cloud_credentials")
-
+    parser.add_argument('-f', '--creds_file', default = default_creds_file, help = "Location of credentials file; defaults to {}".format(default_creds_file))
     args = parser.parse_args()
 
     if args.container == "":
