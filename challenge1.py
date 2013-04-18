@@ -141,7 +141,7 @@ def main():
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
-    cs = pyrax.connect_to_cloudservers(args.region)
+    cs = pyrax.connect_to_cloudservers(region = args.region)
 
     flavor = choose_flavor(cs, "Flavor ID for servers: ")
     image = choose_image(cs, "Image choice: ")

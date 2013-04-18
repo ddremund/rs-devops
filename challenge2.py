@@ -146,7 +146,7 @@ def main():
     if creds_file == "":
         creds_file = def_creds_file
     else:
-        creds_file = os.path.expanduser(creds_file)
+        creds_file = os.path.abspath(os.path.expanduser(creds_file))
 
     region = None
     print "Region?"
