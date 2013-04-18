@@ -18,11 +18,13 @@ import pyrax
 import argparse
 import os
 
-def choose_db_instance_flavor(cdb, prompt):
+def choose_db_instance_flavor(cdb, prompt, initial_choice):
 
     flavors = cdb.list_flavors()
     ram_options = {}
     for flavor in flavors:
+        if initial_choice == flavor.ram:
+            return flavor
         ram_options[str(flavor.ram)] = flavor
     print "\nHow much RAM ?\nOptions:",
     for option in sorted(ram_options.iteritems(), key=lambda item: int(item[0])):
@@ -38,24 +40,30 @@ def choose_db_instance_flavor(cdb, prompt):
 
 def main():
 
-    def_creds_file = os.path.join(os.path.expanduser("~"), 
+    default_creds_file = os.path.join(os.path.expanduser("~"), 
         ".rackspace_cloud_credentials")
-    creds_file = raw_input("Location of credentials file [{}]? ".format(def_creds_file))
-    if creds_file == "":
-        creds_file = def_creds_file
-    else:
-        creds_file = os.path.abspath(os.path.expanduser(creds_file))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('region', metavar = "REGION", choices = ['DFW', 'ORD', 
+        'LON'], help = "Region to connect to")
+    parser.add_argument('ram', metavar ='RAM', 
+        help = "RAM amount for instance in MB")
+    parser.add_argument('instance_name', metavar = 'INST_NAME', 
+        help = "Name of MySQL instance to create")
+    parser.add_argument('db_name', metavar = 'DB_NAME', 
+        help = "Name of database to create")
+    parser.add_argument('user_name', metavar = 'USER_NAME', 
+        help = "User to create")
+    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+        help = "Location of credentials file; defaults to {}".format(default_creds_file))
+
+    args = parser.parse_args()
+
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
-    region = None
-    print "Region?"
-    while region not in ["DFW", "ORD"]:
-        region = raw_input("(DFW | ORD | LON): ")
-
     cdb = pyrax.connect_to_cloud_databases(region = region)
-    flavor = choose_db_instance_flavor(cdb, "Ram Amount: ")
-    
-
+    flavor = choose_db_instance_flavor(cdb, "Ram Amount: ", args.ram)
            
 
 if __name__ == '__main__':

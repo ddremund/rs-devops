@@ -36,8 +36,6 @@ def main():
 
     args = parser.parse_args()
 
-    print args
-
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
