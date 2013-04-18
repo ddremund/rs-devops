@@ -108,7 +108,7 @@ def create_server_from_image(cs, server_name, image_name, image_id, flavor):
 
     complete = False
     while(not complete):
-        time.sleep(10)
+        time.sleep(20)
         servers = cs.servers.list()
         for server in servers:
             if (server.id == new_server.id):
