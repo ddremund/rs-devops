@@ -78,39 +78,49 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_server_from_image(cs, server_name, image_name, image_id, flavor):
+def create_servers(cs, server_list): 
 
-    print "Creating server \"{}\" from \"{}\"...".format(server_name, image_name)
-    try:
-        new_server = cs.servers.create(server_name, image_id, flavor.id)
-    except Exception, e:
-        print "Error in server creation: {}".format(e)
-        sys.exit(1)
+    new_servers = []
+    print
+    
+    for server in server_list:
+        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
+            server['image_name'])
+        try:
+            server_object = cs.servers.create(server['name'], server['image_id']
+                , server['flavor'].id)
+        except Exception, e:
+            print "Error in server creation: {}".format(e)
+        else:
+            new_servers.append((server_object, server_object.adminPass))
 
-    adminPass = new_server.adminPass
-
-    complete = False
-    while(not complete):
+    completed = []
+    
+    while len(completed) < len(new_servers):
         time.sleep(20)
         servers = cs.servers.list()
-        for server in servers:
-            if (server.id == new_server.id):
-                print "{} - {}% complete".format(server.name, server.progress)
-                if server.status == 'ACTIVE':
-                    new_server = server
-                    complete = True
-                if server.status == 'ERROR':
-                    print "Error in server creation."
-                    sys.exit(1)
+        print "{} of {} servers completed".format(len(completed), len(new_servers))
+        for server in servers: 
+            new_servers_copy = list(new_servers)
+            for new_server, admin_pass in new_servers_copy:
+                if (server.id == new_server.id):
+                    print "{} - {}% complete".format(server.name, server.progress)
+                    if server.status == 'ACTIVE':
+                        completed.append((server, admin_pass))
+                    if server.status == 'ERROR':
+                        print "Error in server creation."
+                        new_servers.remove((new_server, admin_pass))
 
-    print "\nServer created.\n"
-    print "Name:", new_server.name
-    print "ID:", new_server.id
-    print "Status:", new_server.status
-    print "Admin Password:", adminPass
-    print "Networks", new_server.networks
+    print "\n{} Server(s) created.\n".format(len(completed))
+    for server, admin_pass in completed: 
+        print "Name:", server.name
+        print "ID:", server.id
+        print "Status:", server.status
+        print "Admin Password:", admin_pass
+        print "Networks", server.networks
+        print
 
-    return new_server.id
+    return completed
 
 def main():
 
@@ -136,8 +146,15 @@ def main():
     flavor = choose_flavor(cs, "Flavor ID for servers: ")
     image = choose_image(cs, "Image choice: ")
 
+    servers = []
     for i in range(1, args.number + 1):
-    	create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
+        #create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
+        servers.append({'name': "{}{}".format(args.base, i),
+                        'image_name': image.name,
+                        'image_id': image.id,
+                        'flavor': flavor})
+    create_servers(cs, servers)
+    	
     
 
 if __name__ == '__main__':

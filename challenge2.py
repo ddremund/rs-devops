@@ -98,6 +98,7 @@ def create_image(cs, base_server, image_name):
 def create_servers(cs, server_list): 
 
     new_servers = []
+    print
 
     for server in server_list:
         print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
@@ -115,8 +116,8 @@ def create_servers(cs, server_list):
     while len(completed) < len(new_servers):
         time.sleep(20)
         servers = cs.servers.list()
-        for server in servers:
-            #print "{} of {} servers completed".format(len(new_servers), len(completed))
+        #print "{} of {} servers completed".format(len(completed), len(new_servers))
+        for server in servers: 
             new_servers_copy = list(new_servers)
             for new_server, admin_pass in new_servers_copy:
                 if (server.id == new_server.id):
