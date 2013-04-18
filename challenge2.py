@@ -129,6 +129,48 @@ def create_server_from_image(cs, server_name, image_name, image_id, flavor):
 
     return new_server.id
 
+def create_servers(cs, server_list): 
+
+    new_servers = []
+
+    for server in server_list:
+        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
+            server['image_name'])
+        try:
+            server_object = cs.servers.create(server['name'], server['image_id']
+                , server['flavor'].id)
+        except Exception, e:
+            print "Error in server creation: {}".format(e)
+        else:
+            new_servers.append((server_object, server_object.adminPass))
+
+    completed = []
+    
+    while len(completed) < len(new_servers):
+        time.sleep(20)
+        servers = cs.servers.list()
+        for server in servers:
+            #print "{} of {} servers completed".format(len(new_servers), len(completed))
+            new_servers_copy = list(new_servers)
+            for new_server, admin_pass in new_servers_copy:
+                if (server.id == new_server.id):
+                    print "{} - {}% complete".format(server.name, server.progress)
+                    if server.status == 'ACTIVE':
+                        completed.append((server, admin_pass))
+                    if server.status == 'ERROR':
+                        print "Error in server creation."
+                        new_servers.remove((new_server, admin_pass))
+
+    for server, admin_pass in completed:
+        print "\nServer created.\n"
+        print "Name:", server.name
+        print "ID:", server.id
+        print "Status:", server.status
+        print "Admin Password:", adminPass
+        print "Networks", server.networks
+
+    return completed
+
 def main():
     
     def_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
@@ -164,7 +206,10 @@ def main():
 
     image_id = create_image(cs, base_server, image_name)
 
-    create_server_from_image(cs, clone_name, image_name, image_id, clone_flavor)
+    #create_server_from_image(cs, clone_name, image_name, image_id, clone_flavor)
+    server_dict = {'name': clone_name, 'image_name': image_name,
+                    'image_id': image_id, 'flavor': clone_flavor}
+    create_servers(cs, [server_dict])
 
 if __name__ == '__main__':
     main()
