@@ -135,19 +135,9 @@ def main():
 
     flavor = choose_flavor(cs, "Flavor ID for servers: ")
     image = choose_image(cs, "Image choice: ")
-    threads = []
+
     for i in range(1, args.number + 1):
-    	threads.append(threading.Thread(target = create_server_from_image, args = (cs, "{}{}".format(args.base, i), image.name, image.id, flavor)))
-    	#create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
-    for thread in threads:
-    	thread.start()
-    	time.sleep(.5)
-    try:
-    	for thread in threads:
-    		while thread.isAlive():
-    			thread.join(5)
-    except KeyboardInterrupt:
-    	print "Caught keyboard interrupt, terminating threads."
+    	create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
     
 
 if __name__ == '__main__':
