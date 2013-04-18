@@ -14,112 +14,146 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pyrax
+import os
+import sys
 import argparse
-import json
-import requests
 import time
+import threading
+
+def choose_image(cs, prompt):
+
+	images = cs.images.list()
+
+	images_dict = {}
+
+	print "\nAvailable Images"
+
+	for num, image in enumerate(images):
+		images_dict[str(num)] = image
+		print "Selection {}".format(num)
+		print "Name: {}\nID: {}".format(image.name, image.id)
+		print
+
+	choice = None
+
+	while choice not in images_dict:
+		if choice is not None:
+			print " ** Not a valid image choice ** "
+		choice = raw_input(prompt)
+
+	return images_dict[choice]
+
+
+def choose_flavor(cs, prompt, default_id=2):
+
+    flavors = cs.flavors.list()
+
+    flavors_dict = {}
+    minimum_ram = 0
+
+    print "\nValid flavors: \n"
+
+    for flavor in flavors:
+        if flavor.id == default_id:
+            minimum_ram = flavor.ram
+
+    for flavor in flavors:
+        if flavor.ram < minimum_ram:
+            continue
+        flavors_dict[str(flavor.id)] = flavor
+        print "ID:", flavor.id
+        print "Name:", flavor.name
+        print "RAM:", flavor.ram
+        print "Disk:", flavor.disk
+        print "vCPUs:", flavor.vcpus
+        print
+
+    choice = None
+
+    while choice not in flavors_dict:
+        if choice is not None:
+            print " ** Not a valid flavor ID ** "
+        choice = raw_input(prompt)
+
+    return flavors_dict[choice]
+
+def create_servers(cs, server_list): 
+
+    new_servers = []
+    print
+
+    for server in server_list:
+        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
+            server['image_name'])
+        try:
+            server_object = cs.servers.create(server['name'], server['image_id']
+                , server['flavor'].id)
+        except Exception, e:
+            print "Error in server creation: {}".format(e)
+        else:
+            new_servers.append((server_object, server_object.adminPass))
+
+    completed = []
+    
+    while len(completed) < len(new_servers):
+        time.sleep(20)
+        servers = cs.servers.list()
+        print "{} of {} servers completed".format(len(completed), len(new_servers))
+        for server in servers: 
+            new_servers_copy = list(new_servers)
+            for new_server, admin_pass in new_servers_copy:
+                if (server.id == new_server.id):
+                    print "{} - {}% complete".format(server.name, server.progress)
+                    if server.status == 'ACTIVE':
+                        completed.append((server, admin_pass))
+                    if server.status == 'ERROR':
+                        print "Error in server creation."
+                        new_servers.remove((new_server, admin_pass))
+
+    print "\n{} Server(s) created.\n".format(len(completed))
+    for server, admin_pass in completed: 
+        print "Name:", server.name
+        print "ID:", server.id
+        print "Status:", server.status
+        print "Admin Password:", admin_pass
+        print "Networks", server.networks
+        print
+
+    return completed
 
 def main():
 
+    default_creds_file = os.path.join(os.path.expanduser("~"), 
+    	".rackspace_cloud_credentials")
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-b', '--base', help="Base hostname to use for servers.")
-    parser.add_argument('-c', '--count', type=int, default=3, help="Number of servers to create; default 3.")
-    parser.add_argument('-i', '--image', default="3afe97b2-26dc-49c5-a2cc-a2fc8d80c001", help="ID of image from which to build servers.")
-    parser.add_argument('-f', '--flavor', type=int, choices=range(2,9), default=2, help="Flavor of slice; default 2.")
-    parser.add_argument('-r', '--region', choices=['DFW', 'ORD', 'LON'], default='DFW', help="Region (datacenter) in which to build servers; default DFW.")
-    parser.add_argument('-u', '--user', help="Username for authentication.", required=True)
-    parser.add_argument('-a', '--api-key', help="API Key for authentication.", required=True)
-    
+
+    parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
+    	help = "Cloud Servers region to connect to.")
+    parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
+    parser.add_argument("-n", "--number", type = int, default = 3, help = "Number of servers to build; default is 3.")
+    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+        help = "Location of credentials file; defaults to {}".format(default_creds_file))
+
     args = parser.parse_args()
-    
-    auth_url = 'https://identity.api.rackspacecloud.com/v2.0/tokens'
-    auth_data = {
-        "auth": {
-            "RAX-KSKEY:apiKeyCredentials": {
-                "apiKey": args.api_key,
-                "username": args.user
-            }
-        }
-    }
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json"
-    }
-    
-    r = requests.post(auth_url, data=json.dumps(auth_data), headers=headers)
-    #print json.dumps(r.json(), indent=4)
-    auth_response = r.json()
-    service_catalog = auth_response['access']['serviceCatalog']
-    token = auth_response['access']['token']['id']
-    tenant = auth_response['access']['token']['tenant']
-    
-    headers['X-Auth-Token'] = token
-    
-    
-    service_cat_key = 'cloudServersOpenStack'
-    
-    endpoint = None
-    
-    for service in service_catalog:
-        if service['name'] == service_cat_key:
-            for ep in service['endpoints']:
-                if ep['region'] == args.region:
-                    endpoint = ep['publicURL']
-                    break
-            break
-    if not endpoint:
-        raise SystemExit('Endpoint not found')
-    else:
-        print endpoint
-        
-    servers = {}
-        
-    for i in range(0, args.count):
-        name = "{}{}".format(args.base, i)
-        
-        server_data = {
-            "server" : {
-                "flavorRef": args.flavor,
-                "imageRef": args.image,
-                "name": name
-            }
-        }
-        server_url = "{}/servers".format(endpoint)
-        r = requests.post(server_url, data=json.dumps(server_data), headers=headers)    
-        servers[name] = r.json()['server']  
-        # print r.json()
-        
-    completed = []
-    
-    time.sleep(20)
-    
-    while len(completed) < args.count:
-        for name, server in servers.iteritems():
-            if name in completed:
-                print '%s: 100%%' % name,
-                continue
-            r = requests.get("{}/servers/{}".format(endpoint, server['id']), headers = headers)
-            detail = r.json()['server']
-            servers[name] = dict(server, **detail)
-            if detail['status'] == 'ERROR':
-                progress = detail['status']
-                servers[name]['progress'] = progress
-            else:
-                progress = detail['progress']
-            print '%s: %s%%' % (name, progress),
-            if detail['status'] in ['ACTIVE', 'ERROR']:
-                completed.append(name)
-                if detail['status'] == 'ERROR':
-                    requests.delete(server_url, headers=headers)
-        print
-        time.sleep(30)
-        
-    for name, server in servers.iteritems():
-        print 'Name: %s' % name
-        print 'ID: %s' % server['id']
-        print 'Status: %s' % server['status']
-        print 'IP: %s' % server['accessIPv4']
-        print 'Admin Password: %s' % server['adminPass']
-        
+
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
+    pyrax.set_credential_file(creds_file)
+
+    cs = pyrax.connect_to_cloudservers(args.region)
+
+    flavor = choose_flavor(cs, "Flavor ID for servers: ")
+    image = choose_image(cs, "Image choice: ")
+
+    servers = []
+    for i in range(1, args.number + 1):
+        #create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
+        servers.append({'name': "{}{}".format(args.base, i),
+                        'image_name': image.name,
+                        'image_id': image.id,
+                        'flavor': flavor})
+    create_servers(cs, servers)
+
 if __name__ == '__main__':
     main()
