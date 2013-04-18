@@ -72,7 +72,62 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
+def create_image(cs, base_server, image_name):
 
+    print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
+    try:
+        image_id = cs.servers.create_image(base_server.id, image_name)
+    except Exception, e:
+        print "Error in image creation: {}".format(e)
+        sys.exit(1) 
+
+    complete = False
+    while(not complete):
+        time.sleep(10)
+        imgs = cs.images.list()
+        for img in imgs:
+            if img.id == image_id:
+                print "{} - {}% complete".format(img.name, img.progress)
+                if img.progress > 99:
+                    complete = True
+
+    print "Image created.\n"
+
+    return image_id
+
+def create_server_from_image(cs, server_name, image_name, image_id, flavor):
+
+    print "Creating server \"{}\" from \"{}\"...".format(server_name, image_name)
+    try:
+        new_server = cs.servers.create(server_name, image_id, flavor.id)
+    except Exception, e:
+        print "Error in server creation: {}".format(e)
+        sys.exit(1)
+
+    adminPass = new_server.adminPass
+
+    complete = False
+    while(not complete):
+        time.sleep(10)
+        servers = cs.servers.list()
+        for server in servers:
+            if (server.id == new_server.id):
+                print "{} - {}% complete".format(server.name, server.progress)
+                if server.status == 'ACTIVE':
+                    new_server = server
+                    complete = True
+                if server.status == 'ERROR':
+                    print "Error in server creation."
+                    sys.exit(1)
+
+    print "\nServer created.\n"
+    print "Name:", new_server.name
+    print "ID:", new_server.id
+    print "Status:", new_server.status
+    print "Admin Password:", adminPass
+    print "Networks", new_server.networks
+
+    return new_server.id
 
 def main():
     
@@ -107,54 +162,9 @@ def main():
 
     clone_flavor = choose_flavor(cs, "Enter a flavor ID for the clone: ", base_server.flavor['id'])
 
-    print "\nCreating image \"{}\" from \"{}\"...".format(image_name, base_server.name)
-    try:
-        img_id = cs.servers.create_image(base_server.id, image_name)
-    except Exception, e:
-        print "Error in image creation: {}".format(e)
-        sys.exit(1) 
+    image_id = create_image(cs, base_server, image_name)
 
-    complete = False
-    while(not complete):
-        time.sleep(10)
-        imgs = cs.images.list()
-        for img in imgs:
-            if img.id == img_id:
-                print "{} - {}% complete".format(img.name, img.progress)
-                if img.progress > 99:
-                    complete = True
-
-    print "Image created.\n"
-
-    print "Creating server \"{}\" from \"{}\"...".format(clone_name, image_name)
-    try:
-        clone = cs.servers.create(clone_name, img_id, clone_flavor.id)
-    except Exception, e:
-        print "Error in clone creation: {}".format(e)
-        sys.exit(1)
-
-    adminPass = clone.adminPass
-
-    complete = False
-    while(not complete):
-        time.sleep(10)
-        servers = cs.servers.list()
-        for server in servers:
-            if (server.id == clone.id):
-                print "{} - {}% complete".format(server.name, server.progress)
-                if server.status == 'ACTIVE':
-                    clone = server
-                    complete = True
-                if server.status == 'ERROR':
-                    print "Error in clone creation."
-                    sys.exit(1)
-
-    print "\nClone server created.\n"
-    print "Name:", clone.name
-    print "ID:", clone.id
-    print "Status:", clone.status
-    print "Admin Password:", adminPass
-    print "Networks", clone.networks
+    create_server_from_image(cs, clone_name, image_name, image_id, clone_flavor)
 
 if __name__ == '__main__':
     main()
