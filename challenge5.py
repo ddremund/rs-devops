@@ -66,6 +66,22 @@ def create_clouddb_instance(cdb, name, flavor, disk):
 
     return new_instance
 
+def create_clouddb_database(cdb, instance, name):
+
+    try:
+        db = instance.create_database(name)
+    except Exception, e:
+        print "Error in DB creation: {}".format(e)
+        sys.exit(1)
+
+    dbs = instance.list_databases()
+    print "Database created.\n{} - {}\n".format(db.name, db.id)
+    print "Current databases for instance: '{}':".format(instance.name)
+    for db in dbs:
+        print db.name
+
+    return db
+
 def main():
 
     default_creds_file = os.path.join(os.path.expanduser("~"), 
@@ -99,6 +115,7 @@ def main():
     instance = create_clouddb_instance(cdb, args.instance_name, 
         flavor, args.disk_space)
 
+    db = create_clouddb_database(cdb, instance, args.db_name)
 
 if __name__ == '__main__':
     main()
