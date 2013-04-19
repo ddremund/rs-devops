@@ -23,10 +23,10 @@ def choose_db_instance_flavor(cdb, prompt, initial_choice):
     flavors = cdb.list_flavors()
     ram_options = {}
     for flavor in flavors:
-        if initial_choice == flavor.ram:
-            return flavor
         ram_options[str(flavor.ram)] = flavor
-    print "\nHow much RAM ?\nOptions:",
+    if initial_choice in ram_options:
+        return ram_options[initial_choice]
+    print "\nRAM Options:",
     for option in sorted(ram_options.iteritems(), key=lambda item: int(item[0])):
         print option[0],
     print
@@ -62,8 +62,8 @@ def main():
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
-    cdb = pyrax.connect_to_cloud_databases(region = region)
-    flavor = choose_db_instance_flavor(cdb, "Ram Amount: ", args.flavor_ram)
+    cdb = pyrax.connect_to_cloud_databases(region = args.region)
+    flavor = choose_db_instance_flavor(cdb, "Chosen flavor RAM invalid, choose a valid amount: ", args.flavor_ram)
            
 
 if __name__ == '__main__':
