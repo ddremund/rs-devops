@@ -145,11 +145,15 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
+    parser.add_argument("-r", "--region", required = True, 
+        choices = ['DFW', 'ORD', 'LON'], 
         help = "Cloud Servers region to connect to.")
-    parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
-    parser.add_argument("-n", "--number", type = int, default = 2, help = "Number of servers to build; default is 2.")
-    parser.add_argument("-l", "--lb_name", help = "Name of load balancer to create")
+    parser.add_argument("-b", "--base", required = True, 
+        help = "Base name for servers.")
+    parser.add_argument("-n", "--number", type = int, default = 2, 
+        help = "Number of servers to build; default is 2.")
+    parser.add_argument("-l", "--lb_name", 
+        help = "Name of load balancer to create")
     parser.add_argument("-p", "--port", type = int, default = 80, 
         help = "Port to load balance; defaults to 80.")
     parser.add_argument("-q", "--protocol", default = "HTTP", 
