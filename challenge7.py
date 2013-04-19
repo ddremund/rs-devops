@@ -126,6 +126,20 @@ def create_servers(cs, server_list):
 
     return completed
 
+def create_load_balancer(clb, name, port, protocol, nodes, virtual_ips):
+
+    print "Building Load Balancer '{}'...".format(name)
+    try:
+        lb = clb.create(args.lb_name, port = port, protocol = protocol, 
+            nodes = nodes, virtual_ips = virtual_ips)
+    except Exception, e:
+        print "Error in load balancer creation: {}".format(e)
+        sys.exit(1)
+    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, attempts = 30, 
+        verbose = True, verbose_atts = 'status')
+
+    return lb
+
 def print_load_balancer(lb):
 
     print "Name:", lb.name
@@ -181,26 +195,28 @@ def main():
                         'image_id': image.id,
                         'flavor': flavor})
     created_servers = create_servers(cs, servers)
+
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
 
-    print "Building Load Balancer '{}'...".format(args.lb_name)
-    try:
-        lb = clb.create(args.lb_name, port = args.port, protocol = args.protocol, 
-            nodes = nodes, virtual_ips = [vip])
-    except Exception, e:
-        print "Error in load balancer creation: {}".format(e)
-        sys.exit(1)
-    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 2, attempts = 30, 
-        verbose = False)
+    lb = create_load_balancer(clb, args.lb_name, args,port, args.protocol, nodes, [vip])
+
+    # print "Building Load Balancer '{}'...".format(args.lb_name)
+    # try:
+    #     lb = clb.create(args.lb_name, port = args.port, protocol = args.protocol, 
+    #         nodes = nodes, virtual_ips = [vip])
+    # except Exception, e:
+    #     print "Error in load balancer creation: {}".format(e)
+    #     sys.exit(1)
+    # lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, attempts = 30, 
+    #     verbose = True, verbose_atts = 'status')
 
     if lb is None or lb.status == 'ERROR':
         print "Load balancer creation failed."
         sys.exit(1)
-    print "Load balancer created:"    
+    print "\nLoad balancer created:"    
     print_load_balancer(lb)
-
 
 
 if __name__ == '__main__':
