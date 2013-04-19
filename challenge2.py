@@ -113,10 +113,12 @@ def create_servers(cs, server_list):
 
     completed = []
     
-    while len(completed) < len(new_servers):
+    total_servers = len(new_servers)
+
+    while len(completed) < total_servers:
         time.sleep(20)
         servers = cs.servers.list()
-        #print "{} of {} servers completed".format(len(completed), len(new_servers))
+        print "{} of {} servers completed".format(len(completed), len(new_servers))
         for server in servers: 
             new_servers_copy = list(new_servers)
             for new_server, admin_pass in new_servers_copy:
@@ -128,6 +130,7 @@ def create_servers(cs, server_list):
                     if server.status == 'ERROR':
                         print "Error in server creation."
                         new_servers.remove((new_server, admin_pass))
+                        total_servers -= 1
 
     print "\n{} Server(s) created.\n".format(len(completed))
     for server, admin_pass in completed: 

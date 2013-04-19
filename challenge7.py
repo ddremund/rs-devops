@@ -19,6 +19,7 @@ import os
 import sys
 import argparse
 import time
+from pyrax.utils import wait_until
 
 def choose_image(cs, prompt):
 
@@ -109,7 +110,6 @@ def create_servers(cs, server_list):
                     if server.status == 'ACTIVE':
                         completed.append((server, admin_pass))
                         new_servers.remove((new_server, admin_pass))
-                        total_servers -= 1
                     if server.status == 'ERROR':
                         print "Error in server creation."
                         new_servers.remove((new_server, admin_pass))
@@ -181,14 +181,20 @@ def main():
         condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
 
+    print "Building Load Balancer '{}'...".format(args.lb_name)
     try:
         lb = clb.create(args.lb_name, port = args.port, protocol = args.protocol, 
             nodes = nodes, virtual_ips = [vip])
     except Exception, e:
         print "Error in load balancer creation: {}".format(e)
         sys.exit(1)
+    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 2, attempts = 30, 
+        verbose = False)
 
-    print "Load balancer created:"
+    if lb is None or lb.status == 'ERROR':
+        print "Load balancer creation failed."
+        sys.exit(1)
+    print "Load balancer created:"    
     print_load_balancer(lb)
 
 
