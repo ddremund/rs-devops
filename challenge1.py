@@ -106,6 +106,7 @@ def create_servers(cs, server_list):
                     print "{} - {}% complete".format(server.name, server.progress)
                     if server.status == 'ACTIVE':
                         completed.append((server, admin_pass))
+                        new_servers.remove((new_server, admin_pass))
                     if server.status == 'ERROR':
                         print "Error in server creation."
                         new_servers.remove((new_server, admin_pass))

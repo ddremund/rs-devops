@@ -106,6 +106,7 @@ def create_servers(cs, server_list):
                     print "{} - {}% complete".format(server.name, server.progress)
                     if server.status == 'ACTIVE':
                         completed.append((server, admin_pass))
+                        new_servers.remove((new_server, admin_pass))
                     if server.status == 'ERROR':
                         print "Error in server creation."
                         new_servers.remove((new_server, admin_pass))
@@ -155,13 +156,13 @@ def main():
 
     servers = []
     for i in range(1, args.number + 1):
-        #create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
         servers.append({'name': "{}{}".format(args.base, i),
                         'image_name': image.name,
                         'image_id': image.id,
                         'flavor': flavor})
     created_servers = create_servers(cs, servers)
-    nodes = 
+    nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
+        condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
 
     try:
