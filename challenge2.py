@@ -166,7 +166,7 @@ def main():
     print
 
     def_clone_name = "{}{}".format(base_server.name, "-clone")
-    clone_name = raw_input("Enter a name for the clone [{}]:".format(def_clone_name))
+    clone_name = raw_input("Enter a name for the clone [{}]: ".format(def_clone_name))
     if (clone_name == ""):
         clone_name = def_clone_name
 
