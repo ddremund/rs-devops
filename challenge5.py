@@ -17,6 +17,7 @@
 import pyrax
 import argparse
 import os
+import time
 
 def choose_db_instance_flavor(cdb, prompt, initial_choice):
 
@@ -38,6 +39,33 @@ def choose_db_instance_flavor(cdb, prompt, initial_choice):
 
     return ram_options[ram]
 
+def create_clouddb_instance(cdb, name, flavor, disk):
+
+    print "\nCreating MySQL instance \"{}\" from \"{}\"...".format(name, flavor.name)
+    try:
+        new_instance = cdb.create(name, flavor = flavor, volume = disk)
+    except Exception, e:
+        print "Error in instance creation: {}".format(e)
+        sys.exit(1) 
+
+    complete = False
+    while(not complete):
+        instances = cdb.list()
+        for instance in instances:
+            if instance.id == new_instance.id:
+                print "{} - Building...".format(instance.name)
+                if instance.status == 'ACTIVE':
+                    complete = True
+                    new_instance = instance
+                if instance.status == 'ERROR':
+                    print "Error in instance creation."
+                    sys.exit(1)
+        time.sleep(15)
+
+    print "Instance created.\n{} - {}\n".format(new_instance.name, new_instance.id)
+
+    return new_instance
+
 def main():
 
     default_creds_file = os.path.join(os.path.expanduser("~"), 
@@ -46,8 +74,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--region', choices = ['DFW', 'ORD', 
         'LON'], help = "Region to connect to", required = True)
-    parser.add_argument('-f', '--flavor_ram', 
+    parser.add_argument('-f', '--flavor_ram', type = int, 
         help = "RAM amount for instance in MB", required = True)
+    parser.add_argument('-s', '--disk_space', type = int, 
+        help = "Amount of disk space to allocate in GB", required = True)
     parser.add_argument('-i', '--instance_name', 
         help = "Name of MySQL instance to create", required = True)
     parser.add_argument('-d', '--db_name', 
@@ -63,8 +93,12 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cdb = pyrax.connect_to_cloud_databases(region = args.region)
-    flavor = choose_db_instance_flavor(cdb, "Chosen flavor RAM invalid, choose a valid amount: ", args.flavor_ram)
-           
+    flavor = choose_db_instance_flavor(cdb, 
+        "Chosen flavor RAM invalid, choose a valid amount: ", str(args.flavor_ram))
+    
+    instance = create_clouddb_instance(cdb, args.instance_name, 
+        flavor, args.disk_space)
+
 
 if __name__ == '__main__':
     main()
