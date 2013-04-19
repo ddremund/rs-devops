@@ -75,12 +75,24 @@ def create_clouddb_database(cdb, instance, name):
         sys.exit(1)
 
     dbs = instance.list_databases()
-    print "Database created.\n{} - {}\n".format(db.name, db.id)
+    print "Database {} created.".format(db.name)
     print "Current databases for instance: '{}':".format(instance.name)
     for db in dbs:
         print db.name
 
     return db
+
+def create_db_user(cdb, instance, name, password, databases):
+
+    try:
+        user = instance.create_user(name, password, database_names = databases)
+    except Exception, e:
+        print "Error in user creation: {}".format(e)
+        sys.exit(1)
+
+    print "User {} created on instance {}.".format(user.name, instance.name)
+
+    return user
 
 def main():
 
@@ -100,6 +112,8 @@ def main():
         help = "Name of database to create", required = True)
     parser.add_argument('-u', '--user_name', 
         help = "User to create", required = True)
+    parser.add_argument('-p', '--password', 
+        help = "Password for user", required = True)
     parser.add_argument('-c', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
@@ -116,6 +130,8 @@ def main():
         flavor, args.disk_space)
 
     db = create_clouddb_database(cdb, instance, args.db_name)
+    user = create_db_user(cdb, instance, args.user_name, args.password, [db.name])
+    print
 
 if __name__ == '__main__':
     main()
