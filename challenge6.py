@@ -21,7 +21,6 @@ import argparse
 
 def print_container(container):
 
-	print "Enabling CDN..."
 	print "cdn_enabled", container.cdn_enabled
 	print "cdn_ttl", container.cdn_ttl
 	print "cdn_log_retention", container.cdn_log_retention
@@ -70,7 +69,8 @@ def main():
 		container.make_public(ttl=args.ttl)
 	except Exception, e:
 		print "Error making container public: {}".format(e)
-
+		
+	print "Enabling CDN..."
 	print_container(container)
 
 if __name__ == '__main__':
