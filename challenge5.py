@@ -44,17 +44,17 @@ def main():
         ".rackspace_cloud_credentials")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('region', metavar = "REGION", choices = ['DFW', 'ORD', 
-        'LON'], help = "Region to connect to")
-    parser.add_argument('ram', metavar ='RAM', 
-        help = "RAM amount for instance in MB")
-    parser.add_argument('instance_name', metavar = 'INST_NAME', 
-        help = "Name of MySQL instance to create")
-    parser.add_argument('db_name', metavar = 'DB_NAME', 
-        help = "Name of database to create")
-    parser.add_argument('user_name', metavar = 'USER_NAME', 
-        help = "User to create")
-    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+    parser.add_argument('-r', '--region', choices = ['DFW', 'ORD', 
+        'LON'], help = "Region to connect to", required = True)
+    parser.add_argument('-f', '--flavor_ram', 
+        help = "RAM amount for instance in MB", required = True)
+    parser.add_argument('-i', '--instance_name', 
+        help = "Name of MySQL instance to create", required = True)
+    parser.add_argument('-d', '--db_name', 
+        help = "Name of database to create", required = True)
+    parser.add_argument('-u', '--user_name', 
+        help = "User to create", required = True)
+    parser.add_argument('-c', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
     args = parser.parse_args()
@@ -63,7 +63,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cdb = pyrax.connect_to_cloud_databases(region = region)
-    flavor = choose_db_instance_flavor(cdb, "Ram Amount: ", args.ram)
+    flavor = choose_db_instance_flavor(cdb, "Ram Amount: ", args.flavor_ram)
            
 
 if __name__ == '__main__':
