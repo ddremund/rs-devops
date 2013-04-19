@@ -100,7 +100,7 @@ def create_servers(cs, server_list):
     while len(completed) < total_servers:
         time.sleep(20)
         servers = cs.servers.list()
-        print "{} of {} servers completed".format(len(completed), len(new_servers))
+        print "{} of {} servers completed".format(len(completed), total_servers)
         for server in servers: 
             new_servers_copy = list(new_servers)
             for new_server, admin_pass in new_servers_copy:
