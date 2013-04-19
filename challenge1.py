@@ -110,7 +110,7 @@ def create_servers(cs, server_list):
                         completed.append((server, admin_pass))
                         new_servers.remove((new_server, admin_pass))
                     if server.status == 'ERROR':
-                        print "Error in server creation."
+                        print "{} - Error in server creation.".format(server.name)
                         new_servers.remove((new_server, admin_pass))
                         total_servers -= 1
 
