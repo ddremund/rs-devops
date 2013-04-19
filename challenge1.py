@@ -19,7 +19,6 @@ import os
 import sys
 import argparse
 import time
-import threading
 
 def choose_image(cs, prompt):
 
