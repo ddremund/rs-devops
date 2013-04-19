@@ -51,7 +51,11 @@ def main():
     try:
         container = cf.get_container(args.container)
     except:
-        container = cf.create_container(args.container)
+        try:
+            container = cf.create_container(args.container)
+        except Exception, e:
+            print "Container exception: {}".format(e)
+            sys.exit(1)
 
     directory = os.path.abspath(os.path.expanduser(args.dir))
     if not os.path.isdir(directory):

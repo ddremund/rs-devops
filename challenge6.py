@@ -15,10 +15,63 @@
 # limitations under the License.
 
 import pyrax
+import os
+import sys
+import argparse
 
-def main():.
-    
+def print_container(container):
 
+	print "Enabling CDN..."
+	print "cdn_enabled", container.cdn_enabled
+	print "cdn_ttl", container.cdn_ttl
+	print "cdn_log_retention", container.cdn_log_retention
+	print "cdn_uri", container.cdn_uri
+	print "cdn_ssl_uri", container.cdn_ssl_uri
+	print "cdn_streaming_uri", container.cdn_streaming_uri
+	# print "cdn_ios_uri", container.cdn_ios_uri
+
+def main():
+
+	default_creds_file = os.path.join(os.path.expanduser("~"), 
+		".rackspace_cloud_credentials")
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-c', '--container', default = "", 
+		help="Name of container to use/create; random name is used if unspecified.")
+	parser.add_argument('-r', '--region', required = True, 
+		choices=['DFW', 'ORD', 'LON'], help="Name of region.")
+	parser.add_argument('-t', '--ttl', type = int, default = 1200, 
+		help = "TTL for container; defaults to 1200.")
+	parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+		help = "Location of credentials file; defaults to {}.".format(default_creds_file))
+	args = parser.parse_args()
+
+	if args.container == "":
+		args.container = pyrax.utils.random_name(8, ascii_only = True)
+
+	creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
+	pyrax.set_credential_file(creds_file)
+
+	cf = pyrax.connect_to_cloudfiles(args.region)
+
+	print "Using container \"{}\"".format(args.container)
+
+	container = None
+	try:
+		container = cf.get_container(args.container)
+	except:
+		try:
+			container = cf.create_container(args.container)
+		except:
+			print "Container error."
+			sys.exit(1)
+
+	try:
+		container.make_public(ttl=args.ttl)
+	except Exception, e:
+		print "Error making container public: {}".format(e)
+
+	print_container(container)
 
 if __name__ == '__main__':
-    main()
+	main()
