@@ -18,6 +18,7 @@ import pyrax
 import argparse
 import os
 import sys
+import time
 
 
 def main():
@@ -35,7 +36,7 @@ def main():
         help="Directory to upload; defaults to the current directory.")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
-    parser.add_argument('--recursive', 
+    parser.add_argument('--recursive', action = "store_true",
         help = "Recurse and build pseudo-filesystem in the container.")
     args = parser.parse_args()
 
@@ -64,7 +65,7 @@ def main():
         print "{} is not a directory.".format(directory)
         sys.exit(1)
 
-    if(args.recursive):
+    if(not args.recursive):
         for item in os.listdir(directory):
             full_path = os.path.join(directory, item)
             if os.path.isfile(full_path):
@@ -77,9 +78,10 @@ def main():
                     print "{} - Upload succeeded - checksum {}".format(item, file_object.etag)
     else:
         uuid, total_bytes = cf.upload_folder(directory, container)
-        while(cf.get_uploaded(uuid) < total_bytes)
-            print "{} of {} bytes uploaded"
-            sleep(2)
+        while cf.get_uploaded(uuid) < total_bytes:
+            print "{} of {} bytes uploaded".format(cf.get_uploaded(uuid), total_bytes)
+            time.sleep(2)
+        print "Upload complete.\n"
 
 
 if __name__ == '__main__':
