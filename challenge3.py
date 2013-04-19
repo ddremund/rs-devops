@@ -35,6 +35,8 @@ def main():
         help="Directory to upload; defaults to the current directory.")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
+    parser.add_argument('--recursive', 
+        help = "Recurse and build pseudo-filesystem in the container.")
     args = parser.parse_args()
 
     if args.container == "":
@@ -62,16 +64,22 @@ def main():
         print "{} is not a directory.".format(directory)
         sys.exit(1)
 
-    for item in os.listdir(directory):
-        full_path = os.path.join(directory, item)
-        if os.path.isfile(full_path):
-            chksum = pyrax.utils.get_checksum(full_path)
-            try:
-                file_object = cf.upload_file(container, full_path, etag=chksum)
-            except Exception, e:
-                print "{} - Upload failed - {}".format(item, e)
-            else:
-                print "{} - Upload succeeded - checksum {}".format(item, file_object.etag)
+    if(args.recursive):
+        for item in os.listdir(directory):
+            full_path = os.path.join(directory, item)
+            if os.path.isfile(full_path):
+                chksum = pyrax.utils.get_checksum(full_path)
+                try:
+                    file_object = cf.upload_file(container, full_path, etag=chksum)
+                except Exception, e:
+                    print "{} - Upload failed - {}".format(item, e)
+                else:
+                    print "{} - Upload succeeded - checksum {}".format(item, file_object.etag)
+    else:
+        uuid, total_bytes = cf.upload_folder(directory, container)
+        while(cf.get_uploaded(uuid) < total_bytes)
+            print "{} of {} bytes uploaded"
+            sleep(2)
 
 
 if __name__ == '__main__':
