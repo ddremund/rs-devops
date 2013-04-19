@@ -133,6 +133,12 @@ def main():
     parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 2, help = "Number of servers to build; default is 2.")
     parser.add_argument("-l", "--lb_name", help = "Name of load balancer to create")
+    parser.add_argument("-p", "--port", type = int, default = 80, 
+        help = "Port to load balance; defaults to 80.")
+    parser.add_argument("-q", "--protocol", default = "HTTP", 
+        help = "Protocol to load balance; defaults to HTTP")
+    parser.add_argument("-v", "--vip_type", default = "PUBLIC",
+        choices = ["PUBLIC", "PRIVATE"], help = "VIP type; defaults to PUBLIC.")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
@@ -142,6 +148,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
+    clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
 
     flavor = choose_flavor(cs, "Flavor ID for servers: ")
     image = choose_image(cs, "Image choice: ")
@@ -153,7 +160,17 @@ def main():
                         'image_name': image.name,
                         'image_id': image.id,
                         'flavor': flavor})
-    create_servers(cs, servers)
+    created_servers = create_servers(cs, servers)
+    nodes = 
+    vip = clb.VirtualIP(type = args.vip_type)
+
+    try:
+        lb = clb.create(args.lb_name, port = args.port, protocol = args.protocol, 
+            nodes = nodes, virtual_ips = [vip])
+    except Exception, e:
+        print "Error in load balancer creation: {}".format(e)
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
