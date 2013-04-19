@@ -130,7 +130,7 @@ def create_load_balancer(clb, name, port, protocol, nodes, virtual_ips):
 
     print "Building Load Balancer '{}'...".format(name)
     try:
-        lb = clb.create(args.lb_name, port = port, protocol = protocol, 
+        lb = clb.create(name, port = port, protocol = protocol, 
             nodes = nodes, virtual_ips = virtual_ips)
     except Exception, e:
         print "Error in load balancer creation: {}".format(e)
@@ -200,7 +200,7 @@ def main():
         condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
 
-    lb = create_load_balancer(clb, args.lb_name, args,port, args.protocol, nodes, [vip])
+    lb = create_load_balancer(clb, args.lb_name, args.port, args.protocol, nodes, [vip])
 
     # print "Building Load Balancer '{}'...".format(args.lb_name)
     # try:
