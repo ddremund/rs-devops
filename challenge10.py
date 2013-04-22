@@ -170,14 +170,16 @@ def main():
         help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 2, 
         help = "Number of servers to build; default is 2.")
-    parser.add_argument("-k", "--keyfile", 
+    parser.add_argument("-k", "--keyfile", required = True, 
         help = "SSH Key to be installed at /root/.ssh/authorized_keys.")
-    parser.add_argument('-i', '--image_name', 
+    parser.add_argument("-i", "--image_name", 
         help = "Image name to use to build server.  Menu provided if absent.")
-    parser.add_argument('-f', '--flavor_ram', type = int, 
+    parser.add_argument("-f", "--flavor_ram", type = int, 
         help = "RAM of flavor to use in MB.  Menu provided if absent.")
     parser.add_argument("-l", "--lb_name", 
         help = "Name of load balancer to create")
+    parser.add_argument("-d", "--dns_fqdn", required = True, 
+        help = "FQDN for DNS A record pointing to LB VIP.")
     parser.add_argument("-p", "--port", type = int, default = 80, 
         help = "Port to load balance; defaults to 80.")
     parser.add_argument("-q", "--protocol", default = "HTTP", 
@@ -252,15 +254,15 @@ def main():
     print "\nLoad balancer created:"    
     print_load_balancer(lb)
 
-    if args.container == "":
-        args.container = pyrax.utils.random_name(8, ascii_only = True)
+    if args.backup_container == "":
+        args.backup_container = pyrax.utils.random_name(8, ascii_only = True)
 
     container = None
     try:
-        container = cf.get_container(args.container)
+        container = cf.get_container(args.backup_container)
     except:
         try:
-            container = cf.create_container(args.container)
+            container = cf.create_container(args.backup_container)
         except Exception, e:
             print "Container exception:", e
             sys.exit(1)
