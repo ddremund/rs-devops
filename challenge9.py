@@ -163,7 +163,7 @@ def main():
             sys.exit(1)
         print "Domain Created:", domain
 
-    pyrax.set_http_debug(True)
+    # pyrax.set_http_debug(True)
 
     a_rec = {"type": "A",
             "name": args.name,

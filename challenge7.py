@@ -205,16 +205,6 @@ def main():
 
     lb = create_load_balancer(clb, args.lb_name, args.port, args.protocol, nodes, [vip])
 
-    # print "Building Load Balancer '{}'...".format(args.lb_name)
-    # try:
-    #     lb = clb.create(args.lb_name, port = args.port, protocol = args.protocol, 
-    #         nodes = nodes, virtual_ips = [vip])
-    # except Exception, e:
-    #     print "Error in load balancer creation: {}".format(e)
-    #     sys.exit(1)
-    # lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, attempts = 30, 
-    #     verbose = True, verbose_atts = 'status')
-
     if lb is None or lb.status == 'ERROR':
         print "Load balancer creation failed."
         sys.exit(1)
