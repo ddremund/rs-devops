@@ -83,8 +83,8 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates a Cloud Server "
         "and associated A record.", 
-        epilog = "Ex: {} -r DFW -n web1.bob.com -f 2 -i 'Ubuntu 12.10' - "
-        "creates an Ubuntu 12.10 server called web1.bob.com and an "
+        epilog = "Ex: {} -r DFW -n web1.bob.com -f 512 -i 'Ubuntu 12.10' - "
+        "creates a 512MB Ubuntu 12.10 server called web1.bob.com and an "
         "A record pointing to its IP.".format(__file__))
     parser.add_argument('-r', '--region', required = True, 
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
@@ -94,8 +94,8 @@ def main():
         help = "Time to Live for the A record; default 300")
     parser.add_argument('-i', '--image_name', 
         help = "Image name to use to build server.  Menu provided if absent.")
-    parser.add_argument('-f', '--flavor_id', type = int, 
-        help = "ID of flavor to use.  Menu provided if absent.")
+    parser.add_argument('-f', '--flavor_ram', type = int, 
+        help = "RAM of flavor to use in MB.  Menu provided if absent.")
     parser.add_argument('-c', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
     args = parser.parse_args()
@@ -106,23 +106,27 @@ def main():
     cs = pyrax.connect_to_cloudservers(region = args.region)
     dns = pyrax.cloud_dns
 
-    if args.flavor_id is None:
+    if args.flavor_ram is None:
         flavor = choose_flavor(cs, "Choose a flavor ID: ")
-        flavor_id = flavor.id
     else:
-        flavor_id = args.flavor_id
+        flavor = [flavor for flavor in cs.flavors.list() 
+            if flavor.ram == args.flavor_ram]
+        if flavor is None or len(flavor) < 1:
+            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+        else:
+            flavor = flavor[0]
 
     if args.image_name is None:
         image = choose_image(cs, "Choose an image: ")
-        image_id = image.id
     else:
-        image_id = [img for img in cs.images.list() if args.image_name in img.name][0]
-        if image_id == None:
-            print "Error: Image matching '{}' not found.",format(args.image_name)
-            sys.exit(1)
+        image = [img for img in cs.images.list() if args.image_name in img.name]
+        if image == None or len(image) < 1:
+            image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
+        else:
+            image = image[0]
 
-    print "Creating server '{}' with image {} and flavor {}...".format(args.name, image_id, flavor_id)
-    server = cs.servers.create(args.name, image_id, flavor_id)
+    print "Creating server '{}' with image {} and flavor {}...".format(args.name, image.name, flavor.name)
+    server = cs.servers.create(args.name, image.id, flavor.id)
     admin_pass = server.adminPass
     server = wait_until(server, 'status', ['ACTIVE', 'ERROR'], interval = 15, 
         attempts = 80, verbose = True, verbose_atts = 'progress')

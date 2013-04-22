@@ -169,6 +169,8 @@ def main():
         help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 2, 
         help = "Number of servers to build; default is 2.")
+    parser.add_argument("-k", "--keyfile", 
+        help = "SSH key to be installed at /root/.ssh/authorized_keys")
     parser.add_argument("-l", "--lb_name", 
         help = "Name of load balancer to create")
     parser.add_argument("-p", "--port", type = int, default = 80, 

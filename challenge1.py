@@ -133,7 +133,7 @@ def main():
     parser = argparse.ArgumentParser(
         description = "Builds multiple cloud servers given a flavor, image, "
         "and base name.",
-        epilog = "Ex: {} -r DFW -b web -n 3 - builds web1, web2,"
+        epilog = "Ex: {} -r DFW -b web -n 3 -i 'Ubuntu 11.10' -f 512 - builds web1, web2,"
         " and web3 in DFW".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
@@ -141,7 +141,11 @@ def main():
     parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 3, 
         help = "Number of servers to build; default is 3.")
-    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+    parser.add_argument('-i', '--image_name', 
+        help = "Image name to use to build server.  Menu provided if absent.")
+    parser.add_argument('-f', '--flavor_ram', type = int, 
+        help = "RAM of flavor to use in MB.  Menu provided if absent.")
+    parser.add_argument('-c', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
     args = parser.parse_args()
@@ -151,8 +155,24 @@ def main():
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
 
-    flavor = choose_flavor(cs, "Flavor ID for servers: ")
-    image = choose_image(cs, "Image choice: ")
+    if args.flavor_ram is None:
+        flavor = choose_flavor(cs, "Choose a flavor ID: ")
+    else:
+        flavor = [flavor for flavor in cs.flavors.list() 
+            if flavor.ram == args.flavor_ram]
+        if flavor is None or len(flavor) < 1:
+            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+        else:
+            flavor = flavor[0]
+
+    if args.image_name is None:
+        image = choose_image(cs, "Choose an image: ")
+    else:
+        image = [img for img in cs.images.list() if args.image_name in img.name]
+        if image == None or len(image) < 1:
+            image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
+        else:
+            image = image[0]
 
     servers = []
     for i in range(1, args.number + 1):
