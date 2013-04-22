@@ -104,7 +104,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
-    dns = pyrax.clouddns
+    dns = pyrax.cloud_dns
 
     if args.flavor_id is None:
         flavor = choose_flavor(cs, "Choose a flavor ID: ")
@@ -121,7 +121,9 @@ def main():
             print "Error: Image matching '{}' not found.",format(args.image_name)
             sys.exit(1)
 
+    print "Creating server '{}' with image {} and flavor {}...".format(args.name, image_id, flavor_id)
     server = cs.servers.create(args.name, image_id, flavor_id)
+    admin_pass = server.adminPass
     server = wait_until(server, 'status', ['ACTIVE', 'ERROR'], interval = 15, 
         attempts = 80, verbose = True, verbose_atts = 'progress')
 
@@ -132,6 +134,14 @@ def main():
         print 'Server in ERROR status.  Deleting...\n'
         server.delete()
         sys.exit(1)
+
+    print "Server created."
+    print "Name:", server.name
+    print "ID:", server.id
+    print "Status:", server.status
+    print "Admin Password:", admin_pass
+    print "Networks", server.networks
+    print
 
     dns_tokens = args.name.split('.')
     count = len(dns_tokens)
@@ -153,6 +163,8 @@ def main():
             sys.exit(1)
         print "Domain Created:", domain
 
+    pyrax.set_http_debug(True)
+
     a_rec = {"type": "A",
             "name": args.name,
             "data": server.networks[u'public'][0],
@@ -162,6 +174,10 @@ def main():
     except Exception, e:
         print "DNS record creation failed:", e
         sys.exit(1)
+
+    print "Record created."
+    print recs
+    print
 
 
 if __name__ == '__main__':
