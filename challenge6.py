@@ -34,7 +34,8 @@ def main():
 	default_creds_file = os.path.join(os.path.expanduser("~"), 
 		".rackspace_cloud_credentials")
 
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(
+		description = "Creates a CDN-enabled container in Cloud Files.")
 	parser.add_argument('-c', '--container', default = "", 
 		help="Name of container to use/create; random name is used if unspecified.")
 	parser.add_argument('-r', '--region', required = True, 

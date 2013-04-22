@@ -24,7 +24,10 @@ def main():
     default_creds_file = os.path.join(os.path.expanduser("~"), 
     	".rackspace_cloud_credentials")
     
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Create a new A record in"
+        " Cloud DNS.", 
+        epilog = "Ex: {} blog.bob.com 1.2.3.4 bob.com -t 600"
+        " - Create an A record pointing blog.bob.com to 1.2.3.4 with TTL 600".format(__file__))
     parser.add_argument('fqdn', metavar ='FQDN', help = "FQDN for A record")
     parser.add_argument('ip', metavar = 'IP', help = "Target IP address")
     parser.add_argument('domain', metavar = 'DOMAIN', 

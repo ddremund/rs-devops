@@ -24,15 +24,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--region', required = True, 
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
+    parser.add_argument('-d', '--domain', required = True, 
+        help = "Domain in which to create the CNAME record.")
+    parser.add_argument('-n', '--hostname', required = True, 
+        help = "Hostname to use when creating the CNAME record.")
     parser.add_argument('-c', '--container', default = "", 
         help="Name of container to use/create; random name is used if unspecified.")
-    parser.add_argument('-d', '--dir', 
-        default = os.path.dirname(os.path.realpath(__file__)), 
-        help="Directory to upload; defaults to the current directory.")
+    parser.add_argument('-i', '--index_file', 
+        help="Index file to upload; overrides --content_string.")
+    parser.add_argument('-s', '--content_string', default = "", 
+        help = "String to place in index file; defaults to 'Welcome!'")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
-    parser.add_argument('--recursive', action = "store_true",
-        help = "Recurse and build pseudo-filesystem in the container.")
     args = parser.parse_args()
 
     if args.container == "":

@@ -130,12 +130,17 @@ def main():
     default_creds_file = os.path.join(os.path.expanduser("~"), 
     	".rackspace_cloud_credentials")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description = "Builds multiple cloud servers given a flavor, image, "
+        "and base name.",
+        epilog = "Ex: {} -r DFW -b web -n 3 - builds web1, web2,"
+        " and web3 in DFW".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
     	help = "Cloud Servers region to connect to.")
     parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
-    parser.add_argument("-n", "--number", type = int, default = 3, help = "Number of servers to build; default is 3.")
+    parser.add_argument("-n", "--number", type = int, default = 3, 
+        help = "Number of servers to build; default is 3.")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 

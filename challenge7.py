@@ -157,7 +157,10 @@ def main():
     default_creds_file = os.path.join(os.path.expanduser("~"), 
         ".rackspace_cloud_credentials")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
+        "Servers and places them behind a new Cloud Load Balancer.", 
+        epilog = "Ex: {} -r DFW -b web -n 3 -l LB1 - create web1, web2, and "
+        "web3 and place them behind a new CLB called LB1.".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 

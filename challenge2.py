@@ -144,7 +144,14 @@ def create_servers(cs, server_list):
     return completed
 
 def main():
-    
+
+    print "Clones an existing cloud server by taking an image and building a new system."
+    print "Parameters are prompted for during script execution.\n"
+
+    if len(sys.argv) > 1:
+        print "Note: no arguments supported; re-run without them.\n"
+        sys.exit()
+
     def_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
     creds_file = raw_input("Location of credentials file [{}]? ".format(def_creds_file))
     if creds_file == "":

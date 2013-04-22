@@ -26,7 +26,10 @@ def main():
     default_creds_file = os.path.join(os.path.expanduser("~"), 
         ".rackspace_cloud_credentials")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Uploads a directory to a "
+        "Cloud Files container.", 
+        epilog = "Ex: {} -r DFW --recursive - Recursively upload the current "
+        "directory to a randomly-named container in DFW.".format(__file__))
     parser.add_argument('-c', '--container', default = "", 
         help="Name of container to use/create; random name is used if unspecified.")
     parser.add_argument('-r', '--region', required = True, 

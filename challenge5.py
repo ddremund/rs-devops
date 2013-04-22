@@ -99,7 +99,10 @@ def main():
     default_creds_file = os.path.join(os.path.expanduser("~"), 
         ".rackspace_cloud_credentials")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Create a Cloud Database"
+        " instance with a database and a user.", 
+        epilog = "{} -r DFW -f 1024 -s 1 -i mysql1 -d db1 -u user1 -p passw0rd"
+        "\nCreate a 1GB RAM, 1GB disk space instance with the given names.".format(__file__))
     parser.add_argument('-r', '--region', choices = ['DFW', 'ORD', 
         'LON'], help = "Region to connect to", required = True)
     parser.add_argument('-f', '--flavor_ram', type = int, 
