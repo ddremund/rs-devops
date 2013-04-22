@@ -171,7 +171,7 @@ def main():
     parser.add_argument("-n", "--number", type = int, default = 2, 
         help = "Number of servers to build; default is 2.")
     parser.add_argument("-k", "--keyfile", 
-        help = "SSH Key to be added to servers at /root/.ssh/authorized_keys.")
+        help = "SSH Key to be installed at /root/.ssh/authorized_keys.")
     parser.add_argument('-i', '--image_name', 
         help = "Image name to use to build server.  Menu provided if absent.")
     parser.add_argument('-f', '--flavor_ram', type = int, 
@@ -182,6 +182,14 @@ def main():
         help = "Port to load balance; defaults to 80.")
     parser.add_argument("-q", "--protocol", default = "HTTP", 
         help = "Protocol to load balance; defaults to HTTP")
+    parser.add_argument("-g", "--error_file", 
+        help = "File to upload as custom error page.  Overrides --error_content")
+    parser.add_argument("-e", "--error_content", default = "<html><head><title>"
+        "Custom Error</title><body>Error loading page.</body></html>", 
+        help="Custom error page content.  Basic default is set if not supplied.")
+    parser.add_argument("-s", "--backup_container", default = "", 
+        help = "Container to place error page backup in.  Randomly generated "
+        "if not supplied.")
     parser.add_argument("-v", "--vip_type", default = "PUBLIC",
         choices = ["PUBLIC", "PRIVATE"], help = "VIP type; defaults to PUBLIC.")
     parser.add_argument('-c', '--creds_file', default = default_creds_file, 
@@ -194,6 +202,8 @@ def main():
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
     clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
+    cf = pyrax.connect_to_cloudfiles(args.region)
+    dns = pyrax.cloud_dns
 
     if args.flavor_ram is None:
         flavor = choose_flavor(cs, "Choose a flavor ID: ")
@@ -221,8 +231,13 @@ def main():
                         'image_id': image.id,
                         'flavor': flavor})
 
-    with open(os.path.abspath(keyfile)) as f:
-        key = f.read()
+    try:
+        with open(os.path.abspath(args.keyfile)) as f:
+            key = f.read()
+    except Exception, e:
+        print "Error opening SSH key file:", e
+        sys.exit(1)
+
     created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key})
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
@@ -237,6 +252,41 @@ def main():
     print "\nLoad balancer created:"    
     print_load_balancer(lb)
 
+    if args.container == "":
+        args.container = pyrax.utils.random_name(8, ascii_only = True)
+
+    container = None
+    try:
+        container = cf.get_container(args.container)
+    except:
+        try:
+            container = cf.create_container(args.container)
+        except Exception, e:
+            print "Container exception:", e
+            sys.exit(1)
+
+    if args.error_file is None:
+        error_content = args.error_content 
+    else:
+        try:
+            with open(os.path.abspath(args.error_file)) as f:
+                error_content = f.read()
+        except Exception, e:
+            print "Error reading error page file:", e
+            print "Using default error content instead."
+            error_content = args.error_content
+    try:
+        obj = container.store_object('error.html', args.error_content, 
+            content_type = "text/html")
+    except Exception, e:
+        print "Error backing up error content:", e
+
+    try:
+        lb.set_error_page(args.error_content)
+    except Exception, e:
+        print "Error setting LB error page:", e
+
+    
 
 if __name__ == '__main__':
     main()
