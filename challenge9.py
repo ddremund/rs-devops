@@ -135,7 +135,7 @@ def main():
         server.delete()
         sys.exit(1)
 
-    print "Server created."
+    print "\nServer created."
     print "Name:", server.name
     print "ID:", server.id
     print "Status:", server.status
@@ -167,7 +167,7 @@ def main():
 
     a_rec = {"type": "A",
             "name": args.name,
-            "data": server.networks[u'public'][0],
+            "data": server.accessIPv4,
             "ttl": args.ttl}
     try:
         recs = domain.add_records([a_rec])
