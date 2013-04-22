@@ -138,7 +138,8 @@ def main():
 
     parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
     	help = "Cloud Servers region to connect to.")
-    parser.add_argument("-b", "--base", required = True, help = "Base name for servers.")
+    parser.add_argument("-b", "--base", required = True, 
+        help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 3, 
         help = "Number of servers to build; default is 3.")
     parser.add_argument('-i', '--image_name', 
@@ -176,7 +177,6 @@ def main():
 
     servers = []
     for i in range(1, args.number + 1):
-        #create_server_from_image(cs, "{}{}".format(args.base, i), image.name, image.id, flavor)
         servers.append({'name': "{}{}".format(args.base, i),
                         'image_name': image.name,
                         'image_id': image.id,
