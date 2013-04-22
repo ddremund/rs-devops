@@ -26,7 +26,7 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates a static web page "
         "served out of Cloud Files.", 
-        epilog = "{} -r DFW -d bob.com -n www -s 'Hello There!' - "
+        epilog = "Ex: {} -r DFW -d bob.com -n www -s 'Hello There!' - "
         "creates a site for www.bob.com with content 'Hello There!'".format(__file__))
     parser.add_argument('-r', '--region', required = True, 
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
