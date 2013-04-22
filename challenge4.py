@@ -47,7 +47,7 @@ def main():
     try:
     	domain = dns.find(name = args.domain)
     except pyrax.exceptions.NotFound:
-    	answer = raw_input("The domain '%s' was not found.  Do you want to "
+    	answer = raw_input("The domain '{}' was not found.  Do you want to "
     		"create it? [Y/N]".format(args.domain))
     	if not answer.lower().startswith("y"):
     		sys.exit(1)

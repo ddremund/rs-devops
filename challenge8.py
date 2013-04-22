@@ -32,6 +32,8 @@ def main():
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
     parser.add_argument('-d', '--domain', required = True, 
         help = "Domain in which to create the CNAME record.")
+    parser.add_argument('-t', '--ttl', type = int, default = 300, 
+        help = "Time to Live for A record; default 300")
     parser.add_argument('-n', '--hostname', required = True, 
         help = "Hostname to use when creating the CNAME record.")
     parser.add_argument('-c', '--container', default = "", 
@@ -40,6 +42,8 @@ def main():
         help="Index file to upload; overrides --content_string.")
     parser.add_argument('-s', '--content_string', default = "", 
         help = "String to place in index file; defaults to 'Welcome!'")
+    parser.add_argument('-p', '--page_name', default = "index.html", 
+        help = "Name of index page to create if content_string is specified.")
     parser.add_argument('-f', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
     args = parser.parse_args()
@@ -51,6 +55,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cf = pyrax.connect_to_cloudfiles(args.region)
+    dns = pyrax.cloud_dns
 
     print "Using container \"{}\"".format(args.container)
 
@@ -74,19 +79,46 @@ def main():
             print "Must specify either index_file or content_string.\n"
             sys.exit(1)
         try:
-            obj = cf.store_object(container, 'index.html', args.content_string, 
+            obj = container.store_object(args.page_name, args.content_string, 
                 content_type = "text/html")
-            cf.set_container_web_index_page(container, 'index.html')
+            container.set_web_index_page(obj.name)
         except Exception, e:
             print "Error creating index file: {}".format(e)
             sys.exit(1)
     else:
         file_name = os.path.abspath(os.path.expanduser(args.index_file))
         try:
-            obj = cf.upload_file(cont, file_name, content_type = "text/html")
-            cf.set_container_web_index_page(container, obj.name)
+            obj = container.upload_file(file_name, content_type = "text/html")
+            container.set_web_index_page(obj.name)
         except Exception, e:
             print "Error uploading index file: {}".format(e)
+
+    try:
+        domain = dns.find(name = args.domain)
+    except pyrax.exceptions.NotFound:
+        answer = raw_input("The domain '{}' was not found.  Do you want to "
+            "create it? [Y/N]".format(args.domain))
+        if not answer.lower().startswith("y"):
+            sys.exit(1)
+        email = raw_input("Email address for domain? ")
+        try:
+            domain = dns.create(name = args.domain, emailAddress = email,
+                ttl = 300, comment = "created via API script")
+        except pyrax.exceptions.DomainCreationFailed, e:
+            print "Domain creation failed:", e
+            sys.exit(1)
+        print "Domain Created:", domain
+
+    cname_rec = {"type": "CNAME",
+                "name": "{}.{}".format(args.hostname, args.domain),
+                "data": container.cdn_uri[len('http://'):],
+                "ttl": args.ttl}
+
+    try:
+        recs = domain.add_records([cname_rec])
+    except Exception, e:
+        print "Error adding CNAME record: {}".format(e)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
