@@ -32,10 +32,10 @@ def main():
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
     parser.add_argument('-d', '--domain', required = True, 
         help = "Domain in which to create the CNAME record.")
-    parser.add_argument('-t', '--ttl', type = int, default = 300, 
-        help = "Time to Live for A record; default 300")
     parser.add_argument('-n', '--hostname', required = True, 
         help = "Hostname to use when creating the CNAME record.")
+    parser.add_argument('-t', '--ttl', type = int, default = 300, 
+        help = "Time to Live for the CNAME record; default 300")
     parser.add_argument('-c', '--container', default = "", 
         help="Name of container to use/create; random name is used if unspecified.")
     parser.add_argument('-i', '--index_file', 
@@ -66,13 +66,13 @@ def main():
         try:
             container = cf.create_container(args.container)
         except Exception, e:
-            print "Container exception: {}".format(e)
+            print "Container exception:", e
             sys.exit(1)
 
     try:
         container.make_public(ttl = 1200)
     except Exception, e:
-        print "Error making container public: {}".format(e)
+        print "Error making container public:", e
 
     if args.index_file is None:
         if args.content_string is None:
@@ -83,7 +83,7 @@ def main():
                 content_type = "text/html")
             container.set_web_index_page(obj.name)
         except Exception, e:
-            print "Error creating index file: {}".format(e)
+            print "Error creating index file:", e
             sys.exit(1)
     else:
         file_name = os.path.abspath(os.path.expanduser(args.index_file))
@@ -91,7 +91,7 @@ def main():
             obj = container.upload_file(file_name, content_type = "text/html")
             container.set_web_index_page(obj.name)
         except Exception, e:
-            print "Error uploading index file: {}".format(e)
+            print "Error uploading index file:", e
 
     try:
         domain = dns.find(name = args.domain)
@@ -117,7 +117,7 @@ def main():
     try:
         recs = domain.add_records([cname_rec])
     except Exception, e:
-        print "Error adding CNAME record: {}".format(e)
+        print "Error adding CNAME record:", e
         sys.exit(1)
 
 
