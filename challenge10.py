@@ -78,7 +78,7 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_servers(cs, server_list): 
+def create_servers(cs, server_list, files = None): 
 
     new_servers = []
     print
@@ -88,7 +88,7 @@ def create_servers(cs, server_list):
             server['image_name'])
         try:
             server_object = cs.servers.create(server['name'], server['image_id']
-                , server['flavor'].id)
+                , server['flavor'].id, files = files)
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
@@ -159,8 +159,9 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
         "Servers and places them behind a new Cloud Load Balancer.", 
-        epilog = "Ex: {} -r DFW -b web -n 3 -l LB1 - create web1, web2, and "
-        "web3 and place them behind a new CLB called LB1.".format(__file__))
+        epilog = "Ex: {} -r DFW -b web -n 3 -i 'Ubuntu 11.10' -f 512"
+        " -l LB1 - create web1, web2, and web3 and place them behind a new "
+        "CLB called LB1.".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
@@ -170,7 +171,11 @@ def main():
     parser.add_argument("-n", "--number", type = int, default = 2, 
         help = "Number of servers to build; default is 2.")
     parser.add_argument("-k", "--keyfile", 
-        help = "SSH key to be installed at /root/.ssh/authorized_keys")
+        help = "SSH Key to be added to servers at /root/.ssh/authorized_keys.")
+    parser.add_argument('-i', '--image_name', 
+        help = "Image name to use to build server.  Menu provided if absent.")
+    parser.add_argument('-f', '--flavor_ram', type = int, 
+        help = "RAM of flavor to use in MB.  Menu provided if absent.")
     parser.add_argument("-l", "--lb_name", 
         help = "Name of load balancer to create")
     parser.add_argument("-p", "--port", type = int, default = 80, 
@@ -179,7 +184,7 @@ def main():
         help = "Protocol to load balance; defaults to HTTP")
     parser.add_argument("-v", "--vip_type", default = "PUBLIC",
         choices = ["PUBLIC", "PRIVATE"], help = "VIP type; defaults to PUBLIC.")
-    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+    parser.add_argument('-c', '--creds_file', default = default_creds_file, 
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
     args = parser.parse_args()
@@ -190,8 +195,24 @@ def main():
     cs = pyrax.connect_to_cloudservers(region = args.region)
     clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
 
-    flavor = choose_flavor(cs, "Flavor ID for servers: ")
-    image = choose_image(cs, "Image choice: ")
+    if args.flavor_ram is None:
+        flavor = choose_flavor(cs, "Choose a flavor ID: ")
+    else:
+        flavor = [flavor for flavor in cs.flavors.list() 
+            if flavor.ram == args.flavor_ram]
+        if flavor is None or len(flavor) < 1:
+            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+        else:
+            flavor = flavor[0]
+
+    if args.image_name is None:
+        image = choose_image(cs, "Choose an image: ")
+    else:
+        image = [img for img in cs.images.list() if args.image_name in img.name]
+        if image == None or len(image) < 1:
+            image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
+        else:
+            image = image[0]
 
     servers = []
     for i in range(1, args.number + 1):
@@ -199,7 +220,10 @@ def main():
                         'image_name': image.name,
                         'image_id': image.id,
                         'flavor': flavor})
-    created_servers = create_servers(cs, servers)
+
+    with open(os.path.abspath(keyfile)) as f:
+        key = f.read()
+    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key})
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
