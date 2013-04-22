@@ -267,6 +267,8 @@ def main():
             print "Container exception:", e
             sys.exit(1)
 
+    print "Backup up error page to container '{}'".format(args.backup_container)
+
     if args.error_file is None:
         error_content = args.error_content 
     else:
