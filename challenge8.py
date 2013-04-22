@@ -15,13 +15,19 @@
 # limitations under the License.
 
 import pyrax
+import os
+import sys
+import argparse
 
 def main():
 
     default_creds_file = os.path.join(os.path.expanduser("~"), 
         ".rackspace_cloud_credentials")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Creates a static web page "
+        "served out of Cloud Files.", 
+        epilog = "{} -r DFW -d bob.com -n www -s 'Hello There!' - "
+        "creates a site for www.bob.com with content 'Hello There!'".format(__file__))
     parser.add_argument('-r', '--region', required = True, 
         choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
     parser.add_argument('-d', '--domain', required = True, 
@@ -45,6 +51,42 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cf = pyrax.connect_to_cloudfiles(args.region)
+
+    print "Using container \"{}\"".format(args.container)
+
+    container = None
+    try:
+        container = cf.get_container(args.container)
+    except:
+        try:
+            container = cf.create_container(args.container)
+        except Exception, e:
+            print "Container exception: {}".format(e)
+            sys.exit(1)
+
+    try:
+        container.make_public(ttl = 1200)
+    except Exception, e:
+        print "Error making container public: {}".format(e)
+
+    if args.index_file is None:
+        if args.content_string is None:
+            print "Must specify either index_file or content_string.\n"
+            sys.exit(1)
+        try:
+            obj = cf.store_object(container, 'index.html', args.content_string, 
+                content_type = "text/html")
+            cf.set_container_web_index_page(container, 'index.html')
+        except Exception, e:
+            print "Error creating index file: {}".format(e)
+            sys.exit(1)
+    else:
+        file_name = os.path.abspath(os.path.expanduser(args.index_file))
+        try:
+            obj = cf.upload_file(cont, file_name, content_type = "text/html")
+            cf.set_container_web_index_page(container, obj.name)
+        except Exception, e:
+            print "Error uploading index file: {}".format(e)
 
 
 if __name__ == '__main__':
