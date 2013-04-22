@@ -278,13 +278,13 @@ def main():
             print "Using default error content instead."
             error_content = args.error_content
     try:
-        obj = container.store_object('error.html', args.error_content, 
+        obj = container.store_object('error.html', error_content, 
             content_type = "text/html")
     except Exception, e:
         print "Error backing up error content:", e
 
     try:
-        lb.set_error_page(args.error_content)
+        lb.set_error_page(error_content)
     except Exception, e:
         print "Error setting LB error page:", e
 
