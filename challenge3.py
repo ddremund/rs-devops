@@ -30,7 +30,7 @@ def main():
     parser.add_argument('-c', '--container', default = "", 
         help="Name of container to use/create; random name is used if unspecified.")
     parser.add_argument('-r', '--region', required = True, 
-        choices=['DFW', 'ORD', 'LON'], help="Name of region; defaults to DFW.")
+        choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
     parser.add_argument('-d', '--dir', 
         default = os.path.dirname(os.path.realpath(__file__)), 
         help="Directory to upload; defaults to the current directory.")

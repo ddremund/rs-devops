@@ -17,7 +17,31 @@
 import pyrax
 
 def main():
-    pass
+
+    default_creds_file = os.path.join(os.path.expanduser("~"), 
+        ".rackspace_cloud_credentials")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--region', required = True, 
+        choices=['DFW', 'ORD', 'LON'], help="Name of region to use.")
+    parser.add_argument('-c', '--container', default = "", 
+        help="Name of container to use/create; random name is used if unspecified.")
+    parser.add_argument('-d', '--dir', 
+        default = os.path.dirname(os.path.realpath(__file__)), 
+        help="Directory to upload; defaults to the current directory.")
+    parser.add_argument('-f', '--creds_file', default = default_creds_file, 
+        help = "Location of credentials file; defaults to {}".format(default_creds_file))
+    parser.add_argument('--recursive', action = "store_true",
+        help = "Recurse and build pseudo-filesystem in the container.")
+    args = parser.parse_args()
+
+    if args.container == "":
+        args.container = pyrax.utils.random_name(8, ascii_only = True)
+
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
+    pyrax.set_credential_file(creds_file)
+
+    cf = pyrax.connect_to_cloudfiles(args.region)
 
 
 if __name__ == '__main__':
