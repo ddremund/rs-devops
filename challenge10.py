@@ -78,7 +78,7 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_servers(cs, server_list, files = None): 
+def create_servers(cs, server_list, files = None, update_freq = 20): 
 
     new_servers = []
     print
@@ -99,7 +99,7 @@ def create_servers(cs, server_list, files = None):
     total_servers = len(new_servers)
 
     while len(completed) < total_servers:
-        time.sleep(20)
+        time.sleep(update_freq)
         servers = cs.servers.list()
         print "{} of {} servers completed".format(len(completed), total_servers)
         for server in servers: 
@@ -176,10 +176,12 @@ def main():
         help = "Image name to use to build server.  Menu provided if absent.")
     parser.add_argument("-f", "--flavor_ram", type = int, 
         help = "RAM of flavor to use in MB.  Menu provided if absent.")
-    parser.add_argument("-l", "--lb_name", 
+    parser.add_argument("-l", "--lb_name", required = True, 
         help = "Name of load balancer to create")
     parser.add_argument("-d", "--dns_fqdn", required = True, 
         help = "FQDN for DNS A record pointing to LB VIP.")
+    parser.add_argument("-t", "--ttl", type = int, default = 300, 
+        help = "TTL for DNS A record; defaults to 300.")
     parser.add_argument("-p", "--port", type = int, default = 80, 
         help = "Port to load balance; defaults to 80.")
     parser.add_argument("-q", "--protocol", default = "HTTP", 
@@ -240,7 +242,7 @@ def main():
         print "Error opening SSH key file:", e
         sys.exit(1)
 
-    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key})
+    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key}, update_freq = 30)
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
@@ -267,7 +269,7 @@ def main():
             print "Container exception:", e
             sys.exit(1)
 
-    print "Backup up error page to container '{}'".format(args.backup_container)
+    print "Backing up error page to container '{}'.".format(args.backup_container)
 
     if args.error_file is None:
         error_content = args.error_content 
@@ -289,6 +291,41 @@ def main():
         lb.set_error_page(error_content)
     except Exception, e:
         print "Error setting LB error page:", e
+
+
+    dns_tokens = args.dns_fqdn.split('.')
+    count = len(dns_tokens)
+    domain_name = "{}.{}".format(dns_tokens[count -2], dns_tokens[count - 1])
+
+    try:
+        domain = dns.find(name = domain_name)
+    except pyrax.exceptions.NotFound:
+        answer = raw_input("The domain '{}' was not found.  Do you want to "
+            "create it? [Y/N]".format(domain_name))
+        if not answer.lower().startswith("y"):
+            sys.exit(1)
+        email = raw_input("Email address for domain? ")
+        try:
+            domain = dns.create(name = domain_name, emailAddress = email,
+                ttl = 300, comment = "created via API script")
+        except pyrax.exceptions.DomainCreationFailed, e:
+            print "Domain creation failed:", e
+            sys.exit(1)
+        print "Domain Created:", domain
+
+    a_rec = {"type": "A",
+            "name": args.dns_fqdn,
+            "data": lb.virtual_ips[0].address,
+            "ttl": args.ttl}
+    try:
+        recs = domain.add_records([a_rec])
+    except Exception, e:
+        print "DNS record creation failed:", e
+        sys.exit(1)
+
+    print "Record created."
+    print recs
+    print
 
     
 
