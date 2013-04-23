@@ -128,7 +128,7 @@ def main():
             print "Error uploading index file:", e
 
     recs = create_dns_record(dns, args.domain, "{}.{}".format(args.hostname, args.domain), 
-        container.cdn_uri[len('http://'):], ttl, rec_type = "CNAME")
+        container.cdn_uri[len('http://'):], args.ttl, rec_type = "CNAME")
 
     # try:
     #     domain = dns.find(name = args.domain)
