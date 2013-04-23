@@ -334,7 +334,6 @@ def main():
 
     recs = create_dns_record(dns, domain_name, args.dns_fqdn, lb.virtual_ips[0].address, args.ttl, rec_type = "A")
 
-    
 
 if __name__ == '__main__':
     main()

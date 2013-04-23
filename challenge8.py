@@ -130,33 +130,6 @@ def main():
     recs = create_dns_record(dns, args.domain, "{}.{}".format(args.hostname, args.domain), 
         container.cdn_uri[len('http://'):], args.ttl, rec_type = "CNAME")
 
-    # try:
-    #     domain = dns.find(name = args.domain)
-    # except pyrax.exceptions.NotFound:
-    #     answer = raw_input("The domain '{}' was not found.  Do you want to "
-    #         "create it? [Y/N]".format(args.domain))
-    #     if not answer.lower().startswith("y"):
-    #         sys.exit(1)
-    #     email = raw_input("Email address for domain? ")
-    #     try:
-    #         domain = dns.create(name = args.domain, emailAddress = email,
-    #             ttl = 300, comment = "created via API script")
-    #     except pyrax.exceptions.DomainCreationFailed, e:
-    #         print "Domain creation failed:", e
-    #         sys.exit(1)
-    #     print "Domain Created:", domain
-
-    # cname_rec = {"type": "CNAME",
-    #             "name": "{}.{}".format(args.hostname, args.domain),
-    #             "data": container.cdn_uri[len('http://'):],
-    #             "ttl": args.ttl}
-
-    # try:
-    #     recs = domain.add_records([cname_rec])
-    # except Exception, e:
-    #     print "Error adding CNAME record:", e
-    #     sys.exit(1)
-
 
 if __name__ == '__main__':
     main()
