@@ -84,7 +84,7 @@ def create_servers(cs, server_list, files = None, update_freq = 20):
     print
 
     for server in server_list:
-        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
+        print "Creating server \"{}\" from \"{}\"...\n".format(server['name'], 
             server['image_name'])
         try:
             server_object = cs.servers.create(server['name'], server['image_id']
@@ -151,6 +151,40 @@ def print_load_balancer(lb):
     print "Protocol:", lb.protocol
     print "Port:", lb.port
     print
+
+def create_dns_record(dns, domain_name, name, data, ttl, rec_type = "A"):
+
+    try:
+        domain = dns.find(name = domain_name)
+    except pyrax.exceptions.NotFound:
+        answer = raw_input("The domain '{}' was not found.  Do you want to "
+            "create it? [Y/N]".format(domain_name))
+        if not answer.lower().startswith("y"):
+            sys.exit(1)
+        email = raw_input("Email address for domain? ")
+        try:
+            domain = dns.create(name = domain_name, emailAddress = email,
+                ttl = 300, comment = "created via API script")
+        except pyrax.exceptions.DomainCreationFailed, e:
+            print "Domain creation failed:", e
+            sys.exit(1)
+        print "Domain Created:", domain
+
+    a_rec = {"type": rec_type,
+            "name": name,
+            "data": data,
+            "ttl": ttl}
+    try:
+        recs = domain.add_records([a_rec])
+    except Exception, e:
+        print "DNS record creation failed:", e
+        sys.exit(1)
+
+    print "Record created."
+    print recs
+    print
+
+    return recs
 
 def main():
 
@@ -297,35 +331,33 @@ def main():
     count = len(dns_tokens)
     domain_name = "{}.{}".format(dns_tokens[count -2], dns_tokens[count - 1])
 
-    try:
-        domain = dns.find(name = domain_name)
-    except pyrax.exceptions.NotFound:
-        answer = raw_input("The domain '{}' was not found.  Do you want to "
-            "create it? [Y/N]".format(domain_name))
-        if not answer.lower().startswith("y"):
-            sys.exit(1)
-        email = raw_input("Email address for domain? ")
-        try:
-            domain = dns.create(name = domain_name, emailAddress = email,
-                ttl = 300, comment = "created via API script")
-        except pyrax.exceptions.DomainCreationFailed, e:
-            print "Domain creation failed:", e
-            sys.exit(1)
-        print "Domain Created:", domain
+    recs = create_dns_record(dns, domain_name, args.dns_fqdn, lb.virtual_ips[0].address, args.ttl, rec_type = "A")
 
-    a_rec = {"type": "A",
-            "name": args.dns_fqdn,
-            "data": lb.virtual_ips[0].address,
-            "ttl": args.ttl}
-    try:
-        recs = domain.add_records([a_rec])
-    except Exception, e:
-        print "DNS record creation failed:", e
-        sys.exit(1)
+    # try:
+    #     domain = dns.find(name = domain_name)
+    # except pyrax.exceptions.NotFound:
+    #     answer = raw_input("The domain '{}' was not found.  Do you want to "
+    #         "create it? [Y/N]".format(domain_name))
+    #     if not answer.lower().startswith("y"):
+    #         sys.exit(1)
+    #     email = raw_input("Email address for domain? ")
+    #     try:
+    #         domain = dns.create(name = domain_name, emailAddress = email,
+    #             ttl = 300, comment = "created via API script")
+    #     except pyrax.exceptions.DomainCreationFailed, e:
+    #         print "Domain creation failed:", e
+    #         sys.exit(1)
+    #     print "Domain Created:", domain
 
-    print "Record created."
-    print recs
-    print
+    # a_rec = {"type": "A",
+    #         "name": args.dns_fqdn,
+    #         "data": lb.virtual_ips[0].address,
+    #         "ttl": args.ttl}
+    # try:
+    #     recs = domain.add_records([a_rec])
+    # except Exception, e:
+    #     print "DNS record creation failed:", e
+    #     sys.exit(1)
 
     
 
