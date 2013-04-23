@@ -76,6 +76,40 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
+def create_dns_record(dns, domain_name, name, data, ttl, rec_type = "A"):
+
+    try:
+        domain = dns.find(name = domain_name)
+    except pyrax.exceptions.NotFound:
+        answer = raw_input("The domain '{}' was not found.  Do you want to "
+            "create it? [Y/N]".format(domain_name))
+        if not answer.lower().startswith("y"):
+            sys.exit(1)
+        email = raw_input("Email address for domain? ")
+        try:
+            domain = dns.create(name = domain_name, emailAddress = email,
+                ttl = 300, comment = "created via API script")
+        except pyrax.exceptions.DomainCreationFailed, e:
+            print "Domain creation failed:", e
+            sys.exit(1)
+        print "Domain Created:", domain
+
+    a_rec = {"type": rec_type,
+            "name": name,
+            "data": data,
+            "ttl": ttl}
+    try:
+        recs = domain.add_records([a_rec])
+    except Exception, e:
+        print "DNS record creation failed:", e
+        sys.exit(1)
+
+    print "Record created."
+    print recs
+    print
+
+    return recs
+
 def main():
 
     default_creds_file = os.path.join(os.path.expanduser("~"), 
@@ -151,37 +185,7 @@ def main():
     count = len(dns_tokens)
     domain_name = "{}.{}".format(dns_tokens[count -2], dns_tokens[count - 1])
 
-    try:
-        domain = dns.find(name = domain_name)
-    except pyrax.exceptions.NotFound:
-        answer = raw_input("The domain '{}' was not found.  Do you want to "
-            "create it? [Y/N]".format(domain_name))
-        if not answer.lower().startswith("y"):
-            sys.exit(1)
-        email = raw_input("Email address for domain? ")
-        try:
-            domain = dns.create(name = domain_name, emailAddress = email,
-                ttl = 300, comment = "created via API script")
-        except pyrax.exceptions.DomainCreationFailed, e:
-            print "Domain creation failed:", e
-            sys.exit(1)
-        print "Domain Created:", domain
-
-    # pyrax.set_http_debug(True)
-
-    a_rec = {"type": "A",
-            "name": args.name,
-            "data": server.accessIPv4,
-            "ttl": args.ttl}
-    try:
-        recs = domain.add_records([a_rec])
-    except Exception, e:
-        print "DNS record creation failed:", e
-        sys.exit(1)
-
-    print "Record created."
-    print recs
-    print
+    recs = create_dns_record(dns, domain_name, args.name, server.accessIPv4, args.ttl, rec_type = "A")
 
 
 if __name__ == '__main__':

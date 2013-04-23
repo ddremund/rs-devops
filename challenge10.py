@@ -333,32 +333,6 @@ def main():
 
     recs = create_dns_record(dns, domain_name, args.dns_fqdn, lb.virtual_ips[0].address, args.ttl, rec_type = "A")
 
-    # try:
-    #     domain = dns.find(name = domain_name)
-    # except pyrax.exceptions.NotFound:
-    #     answer = raw_input("The domain '{}' was not found.  Do you want to "
-    #         "create it? [Y/N]".format(domain_name))
-    #     if not answer.lower().startswith("y"):
-    #         sys.exit(1)
-    #     email = raw_input("Email address for domain? ")
-    #     try:
-    #         domain = dns.create(name = domain_name, emailAddress = email,
-    #             ttl = 300, comment = "created via API script")
-    #     except pyrax.exceptions.DomainCreationFailed, e:
-    #         print "Domain creation failed:", e
-    #         sys.exit(1)
-    #     print "Domain Created:", domain
-
-    # a_rec = {"type": "A",
-    #         "name": args.dns_fqdn,
-    #         "data": lb.virtual_ips[0].address,
-    #         "ttl": args.ttl}
-    # try:
-    #     recs = domain.add_records([a_rec])
-    # except Exception, e:
-    #     print "DNS record creation failed:", e
-    #     sys.exit(1)
-
     
 
 if __name__ == '__main__':
