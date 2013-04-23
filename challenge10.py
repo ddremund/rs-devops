@@ -193,9 +193,10 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
         "Servers and places them behind a new Cloud Load Balancer.", 
-        epilog = "Ex: {} -r DFW -b web -n 3 -i 'Ubuntu 11.10' -f 512"
-        " -l LB1 - create web1, web2, and web3 and place them behind a new "
-        "CLB called LB1.".format(__file__))
+        epilog = "Ex: {} -r DFW -b web -n 3 -k ~/ssh.key -i 'Ubuntu 11.10'"
+        " -f 512 -l lb1 -d site1.site.com -t 600 -e 'Error!'"
+        " -s tuesday - create web1, web2, and web3 and place them behind a new "
+        "CLB called lb1.".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
