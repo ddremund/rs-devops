@@ -139,8 +139,8 @@ def create_load_balancer(clb, name, port, protocol, nodes, virtual_ips):
     except Exception, e:
         print "Error in load balancer creation: {}".format(e)
         sys.exit(1)
-    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, attempts = 30, 
-        verbose = True, verbose_atts = 'status')
+    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, 
+        attempts = 30, verbose = True, verbose_atts = 'status')
 
     return lb
 

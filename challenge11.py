@@ -135,8 +135,8 @@ def create_load_balancer(clb, name, port, protocol, nodes, virtual_ips):
     except Exception, e:
         print "Error in load balancer creation: {}".format(e)
         sys.exit(1)
-    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, attempts = 30, 
-        verbose = True, verbose_atts = 'status')
+    lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, 
+        attempts = 30, verbose = True, verbose_atts = 'status')
 
     return lb
 
@@ -307,11 +307,11 @@ def main():
         print "Created volume {}.".format(volume.name)
         volume.attach_to_instance(server, mountpoint = args.mount_point)
         volume = wait_until(volume, "status", "in-use", interval = 5, 
-            attempts = 12, verbose = True)
+            attempts = 24, verbose = True)
         if volume is None:
             print "Error attaching volume to {}.".format(server.name)
         else:
-            print "Volume '{}' attached to '{}'.".format(volume.name, serer.name)
+            print "Volume '{}' attached to '{}'.".format(volume.name, sevrer.name)
 
     print
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
