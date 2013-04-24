@@ -222,6 +222,9 @@ def main():
         choices = ["SATA", "SSD"], 
         help = "Type of cloud block storage volume to add to servers; "
         "defaults to SATA.")
+    parser.add_argument("-x", "--volume_name", 
+        help = "Volume name for CBS servers.  Will be appended to server "
+        "names; randomly generated if not supplied.")
     parser.add_argument("-l", "--lb_name", required = True, 
         help = "Name of load balancer to create")
     parser.add_argument("-d", "--dns_fqdn", required = True, 
@@ -238,6 +241,14 @@ def main():
         help = "Location of credentials file; defaults to {}".format(default_creds_file))
 
     args = parser.parse_args()
+
+    creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
+    pyrax.set_credential_file(creds_file)
+
+    cs = pyrax.connect_to_cloudservers(region = args.region)
+    clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
+    cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
+    dns = pyrax.cloud_dns
 
 
 if __name__ == '__main__':
