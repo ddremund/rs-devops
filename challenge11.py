@@ -136,7 +136,7 @@ def create_load_balancer(clb, name, port, protocol, nodes, virtual_ips):
         print "Error in load balancer creation: {}".format(e)
         sys.exit(1)
     lb = wait_until(lb, 'status', ['ACTIVE', 'ERROR'], interval = 10, 
-        attempts = 30, verbose = True, verbose_atts = 'status')
+        attempts = 30, verbose = True)
 
     return lb
 
@@ -194,6 +194,9 @@ def main():
     parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
         "Servers and places them behind a new Cloud Load Balancer.", 
         epilog = "{}".format(__file__))
+#     PS C:\Users\ddremund\Documents\GitHub\rs-devops> python challenge11.py -r DFW -b test -n 3 -i 'Ubuntu 11.10' -f 512 -e t
+# est_network_3 -g '192.168.8.0/24' -s 120 -u SATA -x blockstore -l testlb -d chal11.derekremund.com -y server.crt -k serv
+# er.key
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
@@ -311,7 +314,7 @@ def main():
         if volume is None:
             print "Error attaching volume to {}.".format(server.name)
         else:
-            print "Volume '{}' attached to '{}'.".format(volume.name, sevrer.name)
+            print "Volume '{}' attached to '{}'.\n".format(volume.name, server.name)
 
     print
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
@@ -328,13 +331,13 @@ def main():
     cert = None
     key = None
     try:
-        with open(os.path.abspath(args.ssl_cert)):
+        with open(os.path.abspath(args.ssl_cert)) as f:
             cert = f.read()
-    except:
+    except Exception, e:
         print "Error opening SSH cert file:", e
     else:
         try:
-            with open(os.path.abspath(args.ssl_key)):
+            with open(os.path.abspath(args.ssl_key)) as f:
                 key = f.read()
         except:
             print "Error opening SSH key file:", e
