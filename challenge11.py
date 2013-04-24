@@ -78,7 +78,7 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_servers_with_networks(cs, server_list, networks, update_freq = 20): 
+def create_servers_with_networks(cs, server_list, update_freq = 20): 
 
     new_servers = []
     print
@@ -88,7 +88,7 @@ def create_servers_with_networks(cs, server_list, networks, update_freq = 20):
             server['image_name'])
         try:
             server_object = cs.servers.create(server['name'], server['image_id'], 
-                server['flavor'].id, nics = networks)
+                server['flavor'].id, nics = server['nics'])
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
@@ -211,6 +211,10 @@ def main():
         help = "Image name to use to build server.  Menu provided if absent.")
     parser.add_argument("-f", "--flavor_ram", type = int, 
         help = "RAM of flavor to use in MB.  Menu provided if absent.")
+    parser.add_argument("-e", "--network_name", required = True, 
+        help = "Name of Cloud Network to create.")
+    parser.add_argument("-g", "--network_cidr", required = True, 
+        help = "CIDR block for new network, e.g. '192.168.0.0/24'.")
     parser.add_argument("-s", "--volume_size", type = int, default = 100, 
         help = "Size of block storage volume to add to servers in GB; "
         "defaults to 100.")
@@ -223,6 +227,10 @@ def main():
         "names; randomly generated if not supplied.")
     parser.add_argument("-l", "--lb_name", required = True, 
         help = "Name of load balancer to create")
+    parser.add_argument("-y", "--ssl_cert", required = True, 
+        help = "File containing SSL certificate for load balancer.")
+    parser.add_argument("-z", "--ssl_key", required = True, 
+        help = "File containing SSL key for load balancer.")
     parser.add_argument("-d", "--dns_fqdn", required = True, 
         help = "FQDN for DNS A record pointing to LB VIP.")
     parser.add_argument("-t", "--ttl", type = int, default = 300, 
@@ -242,6 +250,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
+    cnw = pyrax.connect_to_cloud_newtorks(region = args.region)
     clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
     cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
     dns = pyrax.cloud_dns
@@ -265,13 +274,37 @@ def main():
         else:
             image = image[0]
 
+    try:
+        new_net = cnw.create(args.network_name, args.network_cidr)
+        print "Network created:", new_net
+    except Exception, e:
+        print "Error creating cloud network:", e
+        sys.exit(1)
+
+    networks = new_net.get_server_networks(public = True, private = True)
+
     servers = []
     for i in range(1, args.number + 1):
         servers.append({'name': "{}{}".format(args.base, i),
                         'image_name': image.name,
                         'image_id': image.id,
-                        'flavor': flavor})
+                        'flavor': flavor,
+                        'nics': networks})
 
+    created_servers = create_servers_with_networks(cs, servers, 
+        update_freq = 30)
+
+    nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
+        condition = 'ENABLED') for server, admin_pass in created_servers]
+    vip = clb.VirtualIP(type = args.vip_type)
+
+    lb = create_load_balancer(clb, args.lb_name, args.port, args.protocol, nodes, [vip])
+
+    if lb is None or lb.status == 'ERROR':
+        print "Load balancer creation failed."
+        sys.exit(1)
+    print "\nLoad balancer created:"    
+    print_load_balancer(lb)
 
 if __name__ == '__main__':
     main()
