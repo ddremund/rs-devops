@@ -254,7 +254,8 @@ def main():
         flavor = [flavor for flavor in cs.flavors.list() 
             if flavor.ram == args.flavor_ram]
         if flavor is None or len(flavor) < 1:
-            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+            flavor = choose_flavor(cs, 
+                "Specified flavor not found.  Choose a flavor ID: ")
         else:
             flavor = flavor[0]
 
@@ -281,8 +282,8 @@ def main():
         print "Error opening SSH key file:", e
         sys.exit(1)
 
-    created_servers = create_servers_with_files(cs, servers, files = {"/root/.ssh/authorized_keys": key}, 
-                        update_freq = 30)
+    created_servers = create_servers_with_files(cs, servers, 
+        files = {"/root/.ssh/authorized_keys": key}, update_freq = 30)
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
@@ -291,7 +292,7 @@ def main():
     lb = create_load_balancer(clb, args.lb_name, args.port, args.protocol, nodes, [vip])
 
     if lb is None or lb.status == 'ERROR':
-        print "Load balancer creation failed."
+        print "\nLoad balancer creation failed."
         sys.exit(1)
     print "\nLoad balancer created:"    
     print_load_balancer(lb)

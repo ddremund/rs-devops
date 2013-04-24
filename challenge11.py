@@ -256,7 +256,8 @@ def main():
         flavor = [flavor for flavor in cs.flavors.list() 
             if flavor.ram == args.flavor_ram]
         if flavor is None or len(flavor) < 1:
-            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+            flavor = choose_flavor(cs, 
+                "Specified flavor not found.  Choose a flavor ID: ")
         else:
             flavor = flavor[0]
 
@@ -271,7 +272,7 @@ def main():
     
     try:
         new_net = cnw.create(args.network_name, cidr=args.network_cidr)
-        print "Network created:", new_net
+        print "\nNetwork created:", new_net
     except Exception, e:
         print "Error creating cloud network:", e
         sys.exit(1)
@@ -296,10 +297,10 @@ def main():
         volume_name = pyrax.utils.random_name(8, ascii_only = True)
     for server, admin_pass in created_servers:
         try:
-            volume = cbs.create("{}-{}}".format(server.name, volume_name), 
+            volume = cbs.create(name = "{}-{}".format(server.name, volume_name), 
                 size = args.volume_size, volume_type = args.volume_type)
         except Exception, e:
-            print "Error creating volume for server '{}'.".format(server.name)
+            print "Error creating volume for server '{}':.".format(server.name), e
             continue
         print "Created volume {}.".format(volume.name)
         volume.attach_to_instance(server)
@@ -308,16 +309,16 @@ def main():
         if volume is None:
             print "Error attaching volume to {}.".format(server.name)
         else:
-            print "Volume '{}' attached to '{}'.".format()
+            print "Volume '{}' attached to '{}'.".format(volume.name, serer.name)
 
+    print
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
-
     lb = create_load_balancer(clb, args.lb_name, args.port, args.protocol, nodes, [vip])
 
     if lb is None or lb.status == 'ERROR':
-        print "Load balancer creation failed."
+        print "\nLoad balancer creation failed."
         sys.exit(1)
     print "\nLoad balancer created:"    
     print_load_balancer(lb)
