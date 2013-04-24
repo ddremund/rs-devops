@@ -84,7 +84,7 @@ def create_servers_with_files(cs, server_list, files = None, update_freq = 20):
     print
 
     for server in server_list:
-        print "Creating server \"{}\" from \"{}\"...\n".format(server['name'], 
+        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
             server['image_name'])
         try:
             if files is not None:
@@ -99,7 +99,7 @@ def create_servers_with_files(cs, server_list, files = None, update_freq = 20):
             new_servers.append((server_object, server_object.adminPass))
 
     completed = []
-    
+    print
     total_servers = len(new_servers)
 
     while len(completed) < total_servers:
@@ -331,7 +331,6 @@ def main():
         lb.set_error_page(error_content)
     except Exception, e:
         print "Error setting LB error page:", e
-
 
     dns_tokens = args.dns_fqdn.split('.')
     count = len(dns_tokens)

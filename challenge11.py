@@ -84,7 +84,7 @@ def create_servers_with_networks(cs, server_list, update_freq = 20):
     print
 
     for server in server_list:
-        print "Creating server \"{}\" from \"{}\"...\n".format(server['name'], 
+        print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
             server['image_name'])
         try:
             server_object = cs.servers.create(server['name'], server['image_id'], 
@@ -95,7 +95,7 @@ def create_servers_with_networks(cs, server_list, update_freq = 20):
             new_servers.append((server_object, server_object.adminPass))
 
     completed = []
-    
+    print
     total_servers = len(new_servers)
 
     while len(completed) < total_servers:
@@ -193,10 +193,7 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
         "Servers and places them behind a new Cloud Load Balancer.", 
-        epilog = "Ex: {} -r DFW -b web -n 3 -k ~/ssh.key -i 'Ubuntu 11.10'"
-        " -f 512 -l lb1 -d site1.site.com -t 600 -e 'Error!'"
-        " -s tuesday - create web1, web2, and web3 and place them behind a new "
-        "CLB called lb1.".format(__file__))
+        epilog = "{}".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
@@ -205,8 +202,6 @@ def main():
         help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 2, 
         help = "Number of servers to build; default is 2.")
-    parser.add_argument("-k", "--keyfile", required = True, 
-        help = "SSH Key to be installed at /root/.ssh/authorized_keys.")
     parser.add_argument("-i", "--image_name", 
         help = "Image name to use to build server.  Menu provided if absent.")
     parser.add_argument("-f", "--flavor_ram", type = int, 
@@ -229,7 +224,7 @@ def main():
         help = "Name of load balancer to create")
     parser.add_argument("-y", "--ssl_cert", required = True, 
         help = "File containing SSL certificate for load balancer.")
-    parser.add_argument("-z", "--ssl_key", required = True, 
+    parser.add_argument("-k", "--ssl_key", required = True, 
         help = "File containing SSL key for load balancer.")
     parser.add_argument("-d", "--dns_fqdn", required = True, 
         help = "FQDN for DNS A record pointing to LB VIP.")
@@ -250,7 +245,7 @@ def main():
     pyrax.set_credential_file(creds_file)
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
-    cnw = pyrax.connect_to_cloud_newtorks(region = args.region)
+    cnw = pyrax.connect_to_cloud_networks(region = args.region)
     clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
     cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
     dns = pyrax.cloud_dns
@@ -273,9 +268,9 @@ def main():
             image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
         else:
             image = image[0]
-
+    
     try:
-        new_net = cnw.create(args.network_name, args.network_cidr)
+        new_net = cnw.create(args.network_name, cidr=args.network_cidr)
         print "Network created:", new_net
     except Exception, e:
         print "Error creating cloud network:", e
@@ -297,9 +292,9 @@ def main():
     print "Creating and attaching block storage volumes..."
     if args.volume_name is not None:
         volume_name = args.volume_name
-    else
+    else:
         volume_name = pyrax.utils.random_name(8, ascii_only = True)
-    for server, admin_pass in created_servers
+    for server, admin_pass in created_servers:
         try:
             volume = cbs.create("{}-{}}".format(server.name, volume_name), 
                 size = args.volume_size, volume_type = args.volume_type)
@@ -330,13 +325,13 @@ def main():
     cert = None
     key = None
     try:
-        with open(os.path.abspath(args.ssl_cert))
+        with open(os.path.abspath(args.ssl_cert)):
             cert = f.read()
     except:
         print "Error opening SSH cert file:", e
     else:
         try:
-            with open(os.path.abspath(args.ssl_key))
+            with open(os.path.abspath(args.ssl_key)):
                 key = f.read()
         except:
             print "Error opening SSH key file:", e
@@ -346,7 +341,7 @@ def main():
         try:
             lb.add_ssl_termination(securePort=443, secureTrafficOnly = False,
                 certificate = cert, privatekey = key)
-        except Exception, e
+        except Exception, e:
             print "Error adding SSL termination:", e
 
     dns_tokens = args.dns_fqdn.split('.')
