@@ -87,8 +87,12 @@ def create_servers(cs, server_list, files = None, update_freq = 20):
         print "Creating server \"{}\" from \"{}\"...\n".format(server['name'], 
             server['image_name'])
         try:
-            server_object = cs.servers.create(server['name'], server['image_id']
-                , server['flavor'].id, files = files)
+            if files is not None:
+                server_object = cs.servers.create(server['name'], server['image_id'], 
+                    server['flavor'].id, files = files)
+            else:
+                server_object = cs.servers.create(server['name'], server['image_id'], 
+                    server['flavor'].id)
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
