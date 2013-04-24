@@ -337,7 +337,8 @@ def main():
     count = len(dns_tokens)
     domain_name = "{}.{}".format(dns_tokens[count -2], dns_tokens[count - 1])
 
-    recs = create_dns_record(dns, domain_name, args.dns_fqdn, lb.virtual_ips[0].address, args.ttl, rec_type = "A")
+    recs = create_dns_record(dns, domain_name, args.dns_fqdn, 
+        lb.virtual_ips[0].address, args.ttl, rec_type = "A")
 
 
 if __name__ == '__main__':

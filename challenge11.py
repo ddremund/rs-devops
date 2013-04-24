@@ -294,6 +294,27 @@ def main():
     created_servers = create_servers_with_networks(cs, servers, 
         update_freq = 30)
 
+    print "Creating and attaching block storage volumes..."
+    if args.volume_name is not None:
+        volume_name = args.volume_name
+    else
+        volume_name = pyrax.utils.random_name(8, ascii_only = True)
+    for server, admin_pass in created_servers
+        try:
+            volume = cbs.create("{}-{}}".format(server.name, volume_name), 
+                size = args.volume_size, volume_type = args.volume_type)
+        except Exception, e:
+            print "Error creating volume for server '{}'.".format(server.name)
+            continue
+        print "Created volume {}.".format(volume.name)
+        volume.attach_to_instance(server)
+        volume = wait_until(volume, "status", "in-use", interval = 5, 
+            attempts = 12, verbose = True)
+        if volume is None:
+            print "Error attaching volume to {}.".format(server.name)
+        else:
+            print "Volume '{}' attached to '{}'.".format()
+
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]
     vip = clb.VirtualIP(type = args.vip_type)
@@ -305,6 +326,36 @@ def main():
         sys.exit(1)
     print "\nLoad balancer created:"    
     print_load_balancer(lb)
+
+    cert = None
+    key = None
+    try:
+        with open(os.path.abspath(args.ssl_cert))
+            cert = f.read()
+    except:
+        print "Error opening SSH cert file:", e
+    else:
+        try:
+            with open(os.path.abspath(args.ssl_key))
+                key = f.read()
+        except:
+            print "Error opening SSH key file:", e
+
+    if cert is not None and key is not None:
+        print "Adding SSL Termination info..."
+        try:
+            lb.add_ssl_termination(securePort=443, secureTrafficOnly = False,
+                certificate = cert, privatekey = key)
+        except Exception, e
+            print "Error adding SSL termination:", e
+
+    dns_tokens = args.dns_fqdn.split('.')
+    count = len(dns_tokens)
+    domain_name = "{}.{}".format(dns_tokens[count -2], dns_tokens[count - 1])
+
+    recs = create_dns_record(dns, domain_name, args.dns_fqdn, 
+        lb.virtual_ips[0].address, args.ttl, rec_type = "A")
+
 
 if __name__ == '__main__':
     main()
