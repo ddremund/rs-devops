@@ -220,6 +220,8 @@ def main():
     parser.add_argument("-x", "--volume_name", 
         help = "Volume name for CBS servers.  Will be appended to server "
         "names; randomly generated if not supplied.")
+    parser.add_argument("-z", "--mount_point", default = "/dev/xvdb", 
+        help = "Mount point for CBS volume; defaults to /dev/xvdb.")
     parser.add_argument("-l", "--lb_name", required = True, 
         help = "Name of load balancer to create")
     parser.add_argument("-y", "--ssl_cert", required = True, 
@@ -303,7 +305,7 @@ def main():
             print "Error creating volume for server '{}':.".format(server.name), e
             continue
         print "Created volume {}.".format(volume.name)
-        volume.attach_to_instance(server)
+        volume.attach_to_instance(server, mountpoint = args.mount_point)
         volume = wait_until(volume, "status", "in-use", interval = 5, 
             attempts = 12, verbose = True)
         if volume is None:
