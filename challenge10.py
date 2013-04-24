@@ -277,7 +277,8 @@ def main():
         print "Error opening SSH key file:", e
         sys.exit(1)
 
-    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key}, update_freq = 30)
+    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key}, 
+                        update_freq = 30)
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
         condition = 'ENABLED') for server, admin_pass in created_servers]

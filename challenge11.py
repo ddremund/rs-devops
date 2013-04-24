@@ -46,6 +46,9 @@ def main():
         help = "Image name to use to build server.  Menu provided if absent.")
     parser.add_argument("-f", "--flavor_ram", type = int, 
         help = "RAM of flavor to use in MB.  Menu provided if absent.")
+    parser.add_argument("-s", "--volume_size", type = int, default = 100, 
+        help = "Size of block storage volume to add to servers in GB; "
+        "defaults to 100.")
     parser.add_argument("-l", "--lb_name", required = True, 
         help = "Name of load balancer to create")
     parser.add_argument("-d", "--dns_fqdn", required = True, 
@@ -56,14 +59,6 @@ def main():
         help = "Port to load balance; defaults to 80.")
     parser.add_argument("-q", "--protocol", default = "HTTP", 
         help = "Protocol to load balance; defaults to HTTP")
-    parser.add_argument("-g", "--error_file", 
-        help = "File to upload as custom error page.  Overrides --error_content")
-    parser.add_argument("-e", "--error_content", default = "<html><head><title>"
-        "Custom Error</title><body>Error loading page.</body></html>", 
-        help="Custom error page content.  Basic default is set if not supplied.")
-    parser.add_argument("-s", "--backup_container", default = "", 
-        help = "Container to place error page backup in.  Randomly generated "
-        "if not supplied.")
     parser.add_argument("-v", "--vip_type", default = "PUBLIC",
         choices = ["PUBLIC", "PRIVATE"], help = "VIP type; defaults to PUBLIC.")
     parser.add_argument('-c', '--creds_file', default = default_creds_file, 
