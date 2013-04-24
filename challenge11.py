@@ -78,7 +78,7 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_servers(cs, server_list, files = None, update_freq = 20): 
+def create_servers_with_networks(cs, server_list, networks, update_freq = 20): 
 
     new_servers = []
     print
@@ -87,12 +87,8 @@ def create_servers(cs, server_list, files = None, update_freq = 20):
         print "Creating server \"{}\" from \"{}\"...\n".format(server['name'], 
             server['image_name'])
         try:
-            if files is not None:
-                server_object = cs.servers.create(server['name'], server['image_id'], 
-                    server['flavor'].id, files = files)
-            else:
-                server_object = cs.servers.create(server['name'], server['image_id'], 
-                    server['flavor'].id)
+            server_object = cs.servers.create(server['name'], server['image_id'], 
+                server['flavor'].id, nics = networks)
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
@@ -249,6 +245,32 @@ def main():
     clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
     cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
     dns = pyrax.cloud_dns
+
+    if args.flavor_ram is None:
+        flavor = choose_flavor(cs, "Choose a flavor ID: ")
+    else:
+        flavor = [flavor for flavor in cs.flavors.list() 
+            if flavor.ram == args.flavor_ram]
+        if flavor is None or len(flavor) < 1:
+            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+        else:
+            flavor = flavor[0]
+
+    if args.image_name is None:
+        image = choose_image(cs, "Choose an image: ")
+    else:
+        image = [img for img in cs.images.list() if args.image_name in img.name]
+        if image == None or len(image) < 1:
+            image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
+        else:
+            image = image[0]
+
+    servers = []
+    for i in range(1, args.number + 1):
+        servers.append({'name': "{}{}".format(args.base, i),
+                        'image_name': image.name,
+                        'image_id': image.id,
+                        'flavor': flavor})
 
 
 if __name__ == '__main__':

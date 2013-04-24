@@ -78,7 +78,7 @@ def choose_flavor(cs, prompt, default_id=2):
 
     return flavors_dict[choice]
 
-def create_servers(cs, server_list, files = None, update_freq = 20): 
+def create_servers_with_files(cs, server_list, files = None, update_freq = 20): 
 
     new_servers = []
     print
@@ -281,7 +281,7 @@ def main():
         print "Error opening SSH key file:", e
         sys.exit(1)
 
-    created_servers = create_servers(cs, servers, files = {"/root/.ssh/authorized_keys": key}, 
+    created_servers = create_servers_with_files(cs, servers, files = {"/root/.ssh/authorized_keys": key}, 
                         update_freq = 30)
 
     nodes = [clb.Node(address = server.networks[u'private'][0], port = args.port, 
