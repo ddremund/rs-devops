@@ -34,10 +34,15 @@ def main():
         ".rackspace_cloud_credentials")
 
     parser = argparse.ArgumentParser(description = "Deletes all objects in "
-        "various cloud resource categories.")
-    parser.add_argument("-r", "--region", required = True, 
+        "various cloud resource categories.", 
+        epilog = "Ex: {} -r ORD --servers --images --load_balancers - delete "
+        "all cloud servers, custom images, and load balancers in ORD "
+        "region".format(__file__))
+    parser.add_argument('-r', '--region', required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
         help = "Cloud Servers region to delete from")
+    parser.add_argument('-a', '--all', action = 'store_true', 
+        help = "Delete all items in region; equiv to setting all option args")
     parser.add_argument('-s', '--servers', action = 'store_true', 
         help = "Delete all Cloud Servers")
     parser.add_argument('-i', '--images', action = 'store_true', 
@@ -60,10 +65,19 @@ def main():
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
+    if(args.all):
+        args.servers = True
+        args.images = True
+        args.load_balancers = True
+        args.files = True
+        args.databases = True
+        args.networks = True
+        args.block_storage = True
+
     if(args.servers):
         cs = pyrax.connect_to_cloudservers(region = args.region)
         servers = cs.servers.list()
-        print "Deleting {} servers...".format(len(servers))
+        print "Deleting {} Cloud Servers...".format(len(servers))
         delete_resources(servers)
 
     if(args.images):
@@ -73,23 +87,23 @@ def main():
         for image in images:
             if not image.metadata['image_type'] == 'base':
                 custom_images.append(image)
-        print "Deleting {} custom images...".format(len(custom_images))
+        print "Deleting {} custom server images...".format(len(custom_images))
         delete_resources(custom_images)
 
     if(args.load_balancers):
         clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
         lbs = clb.list()
-        print "Deleting {} load balancers...".format(len(lbs))
+        print "Deleting {} Cloud Load Balancers...".format(len(lbs))
         delete_resources(lbs)
 
     if(args.files):
         cf = pyrax.connect_to_cloudfiles(region = args.region)
         for container in cf.get_all_containers():
-            print "Emptying Cloud Files container '{}'".format(container.name)
+            print "Emptying Cloud Files container '{}'...".format(container.name)
             delete_resources(container.get_objects(full_listing = True))
             while len(container.get_objects(limit = 1)) > 0:
                 time.sleep(5)
-            print "Deleting container '{}'".format(container.name)
+            print "Deleting container '{}'...".format(container.name)
             container.delete()
 
     if(args.databases):
