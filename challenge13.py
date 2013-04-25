@@ -18,6 +18,7 @@ import pyrax
 import os
 import sys
 import time
+import argparse
 
 def delete_resources(resources):
 
@@ -38,7 +39,7 @@ def main():
         choices = ['DFW', 'ORD', 'LON'], 
         help = "Cloud Servers region to delete from")
     parser.add_argument('-s', '--servers', action = 'store_true', 
-        help = "Delete all Cloud Servers"))
+        help = "Delete all Cloud Servers")
     parser.add_argument('-i', '--images', action = 'store_true', 
         help = "Delete all custom Cloud Server images")
     parser.add_argument('-l', '--load_balancers', action = 'store_true', 
@@ -71,7 +72,7 @@ def main():
         images = cs.images.list()
         for image in images:
             if not image.metadata['image_type'] == 'base':
-                custom_list.append(image)
+                custom_images.append(image)
         print "Deleting {} custom images...".format(len(custom_images))
         delete_resources(custom_images)
 
@@ -83,7 +84,7 @@ def main():
 
     if(args.files):
         cf = pyrax.connect_to_cloudfiles(region = args.region)
-        for(container in cf.get_all_containers()):
+        for container in cf.get_all_containers():
             print "Emptying Cloud Files container '{}'".format(container.name)
             delete_resources(container.get_objects(full_listing = True))
             while len(container.get_objects(limit = 1)) > 0:
@@ -98,10 +99,14 @@ def main():
         delete_resources(instances)
 
     if(args.networks):
+        custom_networks = []
         cnw = pyrax.connect_to_cloud_networks(region = args.region)
         networks = cnw.list()
-        print "Deleting {} Cloud Networks...".format(len(networks))
-        delete_resources(networks)
+        for network in networks:
+            if not network.label == 'public' and not network.label == 'private':
+                custom_networks.append(network)
+        print "Deleting {} custom Cloud Networks...".format(len(custom_networks))
+        delete_resources(custom_networks)
 
     if(args.block_storage):
         cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
