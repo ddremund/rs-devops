@@ -61,7 +61,9 @@ def main():
 
     if(args.servers):
         cs = pyrax.connect_to_cloudservers(region = args.region)
-        delete_resources(cs.servers.list())
+        servers = cs.servers.list()
+        print "Deleting {} servers...".format(len(servers))
+        delete_resources(servers)
 
     if(args.images):
         custom_images = []
@@ -70,11 +72,38 @@ def main():
         for image in images:
             if not image.metadata['image_type'] == 'base':
                 custom_list.append(image)
+        print "Deleting {} custom images...".format(len(custom_images))
         delete_resources(custom_images)
 
     if(args.load_balancers):
         clb = pyrax.connect_to_cloud_loadbalancers(region = args.region)
-        delete_resources(clb.list())
+        lbs = clb.list()
+        print "Deleting {} load balancers...".format(len(lbs))
+        delete_resources(lbs)
+
+    if(args.files):
+        cf = pyrax.connect_to_cloudfiles(region = args.region)
+        for(container in cf.get_all_containers()):
+            print "Emptying Cloud Files container '{}'".format(container.name)
+            delete_resources(container.get_objects(full_listing = True))
+            while len(container.get_objects(limit = 1)) > 0:
+                time.sleep(5)
+            print "Deleting container '{}'".format(container.name)
+            container.delete()
+
+    if(args.databases):
+        cdb = pyrax.connect_to_cloud_databases(region = args.region)
+        instances = cdb.list()
+        print "Deleting {} Cloud Database instances...".format(len(instances))
+        delete_resources(instances)
+
+    if(args.newtorks):
+        cnw = pyrax.connect_to_cloud_networks(region = args.region)
+        networks = cnw.list()
+        print "Deleting {} Cloud Networks...".format(len(networks))
+        delete_resources(networks)
+
+    
 
 if __name__ == '__main__':
     main()
