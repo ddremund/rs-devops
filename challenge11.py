@@ -193,10 +193,10 @@ def main():
 
     parser = argparse.ArgumentParser(description = "Creates multiple Cloud "
         "Servers and places them behind a new Cloud Load Balancer.", 
-        epilog = "{}".format(__file__))
-#     PS C:\Users\ddremund\Documents\GitHub\rs-devops> python challenge11.py -r DFW -b test -n 3 -i 'Ubuntu 11.10' -f 512 -e t
-# est_network_3 -g '192.168.8.0/24' -s 120 -u SATA -x blockstore -l testlb -d chal11.derekremund.com -y server.crt -k serv
-# er.key
+        epilog = "Ex: {} challenge11.py -r DFW -b test -n 3 -i 'Ubuntu 11.10' -f "
+        "512 -e test_network_3 -g '192.168.8.0/24' -s 120 -u SATA -x "
+        "blockstore -l testlb -d chal11.derekremund.com -y server.crt -k "
+        "server.key".format(__file__))
 
     parser.add_argument("-r", "--region", required = True, 
         choices = ['DFW', 'ORD', 'LON'], 
