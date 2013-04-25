@@ -35,7 +35,10 @@ def main():
 
     default_key_file = os.path.join(os.path.expanduser("~"), ".mailgunapi")
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description = "Configures a simple "
+        "route in Mailgun", 
+        epilog = "Ex: {} derek.remund@apichallenges.mailgun.org "
+        "http://cldsrvr.com/challenge1 -p 1 -d 'API Challenge 12'".format(__file__))
     parser.add_argument('recipient', metavar = 'RECIPIENT', 
         help = "Recipient to match")
     parser.add_argument('target', metavar = 'TARGET', 
