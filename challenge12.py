@@ -14,10 +14,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pyrax
+import os
+import sys
+import json
+import requests
+import argparse
+
+def create_route(api_key, recipient, target, priority, description):
+
+    create_url = 'https://api.mailgun.net/v2/routes'
+
+    return requests.post(
+        create_url, auth = ("api", api_key), 
+        data = {"priority": priority,
+                "description": description,
+                "expression": "match_recipient(\"{}\")".format(recipient),
+                "action": ["forward(\"{}\")".format(target), "stop()"]})
 
 def main():
 
+    default_key_file = os.path.join(os.path.expanduser("~"), ".mailgunapi")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('recipient', metavar = 'RECIPIENT', 
+        help = "Recipient to match")
+    parser.add_argument('target', metavar = 'TARGET', 
+        help = "Target URL to forward to")
+    parser.add_argument('-d', '--description', default = "", 
+        help = "Description for route")
+    parser.add_argument('-p', '--priority', type = int, default = 1, 
+        help = "Priority for route; defaults to 1")
+    parser.add_argument('-k', '--api_key', help = "Mailgun API key; overrides"
+        " --key_file")
+    parser.add_argument('-f', '--key_file', default = default_key_file, 
+        help = "File with API key; defaults to {}".format(default_key_file))
+
+    args = parser.parse_args()
+
+    if args.api_key is None:
+        try: 
+            with open(os.path.abspath(os.path.expanduser(args.key_file))) as f:
+                api_key = f.read()
+        except Exception, e:
+            print "Error reading API key file:", e
+            sys.exit(1)
+    else:
+        api_key = args.api_key
+
+    response =  create_route(api_key, args.recipient, args.target, 
+        args.priority, args.description)
+    print response.text
 
 if __name__ == '__main__':
     main()
