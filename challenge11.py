@@ -349,6 +349,10 @@ def main():
                 certificate = cert, privatekey = key)
         except Exception, e:
             print "Error adding SSL termination:", e
+        else:
+            print "SSL termination added for port 443."
+        finally:
+            print
 
     dns_tokens = args.dns_fqdn.split('.')
     count = len(dns_tokens)
