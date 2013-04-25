@@ -97,13 +97,17 @@ def main():
         print "Deleting {} Cloud Database instances...".format(len(instances))
         delete_resources(instances)
 
-    if(args.newtorks):
+    if(args.networks):
         cnw = pyrax.connect_to_cloud_networks(region = args.region)
         networks = cnw.list()
         print "Deleting {} Cloud Networks...".format(len(networks))
         delete_resources(networks)
 
-    
+    if(args.block_storage):
+        cbs = pyrax.connect_to_cloud_blockstorage(region = args.region)
+        volumes = cbs.list()
+        print "Deleting {} Cloud Block Storage volumes...".format(len(volumes))
+        delete_resources(volumes)
 
 if __name__ == '__main__':
     main()
