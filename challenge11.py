@@ -270,7 +270,7 @@ def main():
         image = choose_image(cs, "Choose an image: ")
     else:
         image = [img for img in cs.images.list() if args.image_name in img.name]
-        if image == None or len(image) < 1:
+        if image is None or len(image) < 1:
             image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
         else:
             image = image[0]
