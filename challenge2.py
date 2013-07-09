@@ -152,6 +152,7 @@ def main():
         print "Note: no arguments supported; re-run without them.\n"
         sys.exit()
 
+    pyrax.set_setting("identity_type", "rackspace")
     def_creds_file = os.path.join(os.path.expanduser("~"), ".rackspace_cloud_credentials")
     creds_file = raw_input("Location of credentials file [{}]? ".format(def_creds_file))
     if creds_file == "":

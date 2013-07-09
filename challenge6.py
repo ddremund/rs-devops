@@ -49,6 +49,7 @@ def main():
 	if args.container == "":
 		args.container = pyrax.utils.random_name(8, ascii_only = True)
 
+	pyrax.set_setting("identity_type", "rackspace")
 	creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
 	pyrax.set_credential_file(creds_file)
 

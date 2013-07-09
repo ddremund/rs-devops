@@ -240,6 +240,7 @@ def main():
 
     args = parser.parse_args()
 
+    pyrax.set_setting("identity_type", "rackspace")
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
 
