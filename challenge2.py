@@ -81,16 +81,6 @@ def create_image(cs, base_server, image_name):
         print "Error in image creation: {}".format(e)
         sys.exit(1) 
 
-    # complete = False
-    # while(not complete):
-    #     time.sleep(10)
-    #     imgs = cs.images.list()
-    #     for img in imgs:
-    #         if img.id == image_id:
-    #             print "{} - {}% complete".format(img.name, img.progress)
-    #             if img.progress > 99:
-    #                 complete = True
-
     image = cs.images.get(image_id)
     while image.progress < 100:
         print "{} - {}% complete".format(image.name, image.progress)
