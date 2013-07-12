@@ -97,22 +97,38 @@ def create_servers(cs, server_list):
     
     total_servers = len(new_servers)
 
-    while len(completed) < total_servers:
+    # while len(completed) < total_servers:
+    #     time.sleep(20)
+    #     servers = cs.servers.list()
+    #     print "{} of {} servers completed".format(len(completed), total_servers)
+    #     for server in servers: 
+    #         new_servers_copy = list(new_servers)
+    #         for new_server, admin_pass in new_servers_copy:
+    #             if (server.id == new_server.id):
+    #                 print "{} - {}% complete".format(server.name, server.progress)
+    #                 if server.status == 'ACTIVE':
+    #                     completed.append((server, admin_pass))
+    #                     new_servers.remove((new_server, admin_pass))
+    #                 if server.status == 'ERROR':
+    #                     print "{} - Error in server creation.".format(server.name)
+    #                     new_servers.remove((new_server, admin_pass))
+    #                     total_servers -= 1
+
+    while new_servers:
         time.sleep(20)
-        servers = cs.servers.list()
-        print "{} of {} servers completed".format(len(completed), total_servers)
-        for server in servers: 
-            new_servers_copy = list(new_servers)
-            for new_server, admin_pass in new_servers_copy:
-                if (server.id == new_server.id):
-                    print "{} - {}% complete".format(server.name, server.progress)
-                    if server.status == 'ACTIVE':
-                        completed.append((server, admin_pass))
-                        new_servers.remove((new_server, admin_pass))
-                    if server.status == 'ERROR':
-                        print "{} - Error in server creation.".format(server.name)
-                        new_servers.remove((new_server, admin_pass))
-                        total_servers -= 1
+        new_servers_copy = list(new_servers)
+        for server, admin_pass in new_servers_copy:
+            server = cs.servers.get(server.id)
+            print "{} - {}% complete".format(server.name, server.progress)
+            if server.status == 'ACTIVE':
+                completed.append((server, admin_pass))
+                new_servers.remove((server, admin_pass))
+            if server.status == 'ERROR':
+                print "{} - Error in server creation.".format(server.name)
+                new_servers.remove((server, admin_pass))
+                total_servers -= 1
+         print "{} of {} servers completed".format(len(completed), total_servers)
+                
 
     print "\n{} Server(s) created.\n".format(len(completed))
     for server, admin_pass in completed: 
