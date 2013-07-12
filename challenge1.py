@@ -134,7 +134,7 @@ def main():
         epilog = "Ex: {} -r DFW -b web -n 3 -i 'Ubuntu 11.10' -f 512 - builds web1, web2,"
         " and web3 in DFW".format(__file__))
 
-    parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'LON'], 
+    parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'SYD', 'LON'], 
     	help = "Cloud Servers region to connect to.")
     parser.add_argument("-b", "--base", required = True, 
         help = "Base name for servers.")
