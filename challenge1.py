@@ -84,35 +84,17 @@ def create_servers(cs, server_list):
 
     for server in server_list:
         print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
-            server['image_name'])
+            server['image'].name)
         try:
-            server_object = cs.servers.create(server['name'], server['image_id']
-                , server['flavor'].id)
+            server_object = cs.servers.create(server['name'], server['image'],
+             server['flavor'])
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
             new_servers.append((server_object, server_object.adminPass))
 
     completed = []
-    
     total_servers = len(new_servers)
-
-    # while len(completed) < total_servers:
-    #     time.sleep(20)
-    #     servers = cs.servers.list()
-    #     print "{} of {} servers completed".format(len(completed), total_servers)
-    #     for server in servers: 
-    #         new_servers_copy = list(new_servers)
-    #         for new_server, admin_pass in new_servers_copy:
-    #             if (server.id == new_server.id):
-    #                 print "{} - {}% complete".format(server.name, server.progress)
-    #                 if server.status == 'ACTIVE':
-    #                     completed.append((server, admin_pass))
-    #                     new_servers.remove((new_server, admin_pass))
-    #                 if server.status == 'ERROR':
-    #                     print "{} - Error in server creation.".format(server.name)
-    #                     new_servers.remove((new_server, admin_pass))
-    #                     total_servers -= 1
 
     while new_servers:
         time.sleep(20)
@@ -127,7 +109,7 @@ def create_servers(cs, server_list):
                 print "{} - Error in server creation.".format(server.name)
                 new_servers.remove((server, admin_pass))
                 total_servers -= 1
-         print "{} of {} servers completed".format(len(completed), total_servers)
+        print "{} of {} servers completed".format(len(completed), total_servers)
                 
 
     print "\n{} Server(s) created.\n".format(len(completed))
@@ -179,7 +161,8 @@ def main():
         flavor = [flavor for flavor in cs.flavors.list() 
             if flavor.ram == args.flavor_ram]
         if flavor is None or len(flavor) < 1:
-            flavor = choose_flavor(cs, "Specified flavor not found.  Choose a flavor ID: ")
+            flavor = choose_flavor(cs, "Specified flavor not found.  " 
+                "Choose a flavor ID: ")
         else:
             flavor = flavor[0]
 
@@ -188,15 +171,15 @@ def main():
     else:
         image = [img for img in cs.images.list() if args.image_name in img.name]
         if image == None or len(image) < 1:
-            image = choose_image(cs, "Image matching '{}' not found.  Select image: ".format(args.image_name))
+            image = choose_image(cs, "Image matching '{}' not found." 
+                "  Select image: ".format(args.image_name))
         else:
             image = image[0]
 
     servers = []
     for i in range(1, args.number + 1):
         servers.append({'name': "{}{}".format(args.base, i),
-                        'image_name': image.name,
-                        'image_id': image.id,
+                        'image': image,
                         'flavor': flavor})
     create_servers(cs, servers)
 
