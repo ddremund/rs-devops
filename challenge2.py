@@ -81,19 +81,25 @@ def create_image(cs, base_server, image_name):
         print "Error in image creation: {}".format(e)
         sys.exit(1) 
 
-    complete = False
-    while(not complete):
+    # complete = False
+    # while(not complete):
+    #     time.sleep(10)
+    #     imgs = cs.images.list()
+    #     for img in imgs:
+    #         if img.id == image_id:
+    #             print "{} - {}% complete".format(img.name, img.progress)
+    #             if img.progress > 99:
+    #                 complete = True
+
+    image = cs.images.get(image_id)
+    while image.progress < 100:
+        print "{} - {}% complete".format(image.name, image.progress)
         time.sleep(10)
-        imgs = cs.images.list()
-        for img in imgs:
-            if img.id == image_id:
-                print "{} - {}% complete".format(img.name, img.progress)
-                if img.progress > 99:
-                    complete = True
+        image = cs.images.get(image_id)
 
     print "Image created.\n"
 
-    return image_id
+    return image
 
 def create_servers(cs, server_list): 
 
@@ -102,35 +108,33 @@ def create_servers(cs, server_list):
 
     for server in server_list:
         print "Creating server \"{}\" from \"{}\"...".format(server['name'], 
-            server['image_name'])
+            server['image'].name)
         try:
-            server_object = cs.servers.create(server['name'], server['image_id']
-                , server['flavor'].id)
+            server_object = cs.servers.create(server['name'], server['image'],
+             server['flavor'])
         except Exception, e:
             print "Error in server creation: {}".format(e)
         else:
             new_servers.append((server_object, server_object.adminPass))
 
     completed = []
-    
     total_servers = len(new_servers)
 
-    while len(completed) < total_servers:
+    while new_servers:
         time.sleep(20)
-        servers = cs.servers.list()
+        new_servers_copy = list(new_servers)
+        for server, admin_pass in new_servers_copy:
+            server = cs.servers.get(server.id)
+            print "{} - {}% complete".format(server.name, server.progress)
+            if server.status == 'ACTIVE':
+                completed.append((server, admin_pass))
+                new_servers.remove((server, admin_pass))
+            if server.status == 'ERROR':
+                print "{} - Error in server creation.".format(server.name)
+                new_servers.remove((server, admin_pass))
+                total_servers -= 1
         print "{} of {} servers completed".format(len(completed), total_servers)
-        for server in servers: 
-            new_servers_copy = list(new_servers)
-            for new_server, admin_pass in new_servers_copy:
-                if (server.id == new_server.id):
-                    print "{} - {}% complete".format(server.name, server.progress)
-                    if server.status == 'ACTIVE':
-                        completed.append((server, admin_pass))
-                        new_servers.remove((new_server, admin_pass))
-                    if server.status == 'ERROR':
-                        print "{} - Error in server creation.".format(server.name)
-                        new_servers.remove((new_server, admin_pass))
-                        total_servers -= 1
+                
 
     print "\n{} Server(s) created.\n".format(len(completed))
     for server, admin_pass in completed: 
@@ -185,10 +189,9 @@ def main():
     clone_flavor = choose_flavor(cs, "Enter a flavor ID for the clone: ", 
         base_server.flavor['id'])
 
-    image_id = create_image(cs, base_server, image_name)
+    image = create_image(cs, base_server, image_name)
 
-    server_dict = {'name': clone_name, 'image_name': image_name,
-                    'image_id': image_id, 'flavor': clone_flavor}
+    server_dict = {'name': clone_name,'image': image, 'flavor': clone_flavor}
     create_servers(cs, [server_dict])
 
 if __name__ == '__main__':
