@@ -101,14 +101,16 @@ def create_servers(cs, server_list):
         new_servers_copy = list(new_servers)
         for server, admin_pass in new_servers_copy:
             server = cs.servers.get(server.id)
-            print "{} - {}% complete".format(server.name, server.progress)
-            if server.status == 'ACTIVE':
-                completed.append((server, admin_pass))
-                new_servers.remove((server, admin_pass))
             if server.status == 'ERROR':
                 print "{} - Error in server creation.".format(server.name)
                 new_servers.remove((server, admin_pass))
                 total_servers -= 1
+                continue
+            print "{} - {}% complete".format(server.name, server.progress)
+            if server.status == 'ACTIVE':
+                completed.append((server, admin_pass))
+                new_servers.remove((server, admin_pass))
+            
         print "{} of {} servers completed".format(len(completed), total_servers)
                 
 
