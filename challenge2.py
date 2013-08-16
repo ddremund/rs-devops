@@ -115,14 +115,14 @@ def create_servers(cs, server_list):
         new_servers_copy = list(new_servers)
         for server, admin_pass in new_servers_copy:
             server = cs.servers.get(server.id)
-            print "{} - {}% complete".format(server.name, server.progress)
-            if server.status == 'ACTIVE':
-                completed.append((server, admin_pass))
-                new_servers.remove((server, admin_pass))
             if server.status == 'ERROR':
                 print "{} - Error in server creation.".format(server.name)
                 new_servers.remove((server, admin_pass))
                 total_servers -= 1
+            print "{} - {}% complete".format(server.name, server.progress)
+            if server.status == 'ACTIVE':
+                completed.append((server, admin_pass))
+                new_servers.remove((server, admin_pass))
         print "{} of {} servers completed".format(len(completed), total_servers)
                 
 
@@ -153,11 +153,12 @@ def main():
         creds_file = def_creds_file
     else:
         creds_file = os.path.abspath(os.path.expanduser(creds_file))
+    pyrax.set_credential_file(creds_file)
 
     region = None
     print "Region?"
-    while region not in ["DFW", "ORD"]:
-        region = raw_input("(DFW | ORD): ")
+    while region not in pyrax.regions:
+        region = raw_input("(" +" | ".join(list(pyrax.regions)) + "):")
     
     pyrax.set_credential_file(creds_file)
     cs = pyrax.connect_to_cloudservers(region = region)
