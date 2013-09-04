@@ -158,9 +158,8 @@ def main():
     region = None
     print "Region?"
     while region not in pyrax.regions:
-        region = raw_input("(" +" | ".join(list(pyrax.regions)) + "):")
+        region = raw_input("(" + " | ".join(list(pyrax.regions)) + "): ")
     
-    pyrax.set_credential_file(creds_file)
     cs = pyrax.connect_to_cloudservers(region = region)
 
     base_server = choose_server(cs, "Choose a server to clone: ")
