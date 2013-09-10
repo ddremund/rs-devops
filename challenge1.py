@@ -115,7 +115,7 @@ def create_servers(cs, server_list):
                 
 
     print "\n{} Server(s) created.\n".format(len(completed))
-    for server, admin_pass in completed: 
+    for server, admin_pass in sorted(completed, key= lambda item: item[0].name): 
         print "Name:", server.name
         print "ID:", server.id
         print "Status:", server.status
@@ -136,8 +136,8 @@ def main():
         epilog = "Ex: {} -r DFW -b web -n 3 -i 'Ubuntu 11.10' -f 512 - builds web1, web2,"
         " and web3 in DFW".format(__file__))
 
-    parser.add_argument("-r", "--region", required = True, choices = ['DFW', 'ORD', 'SYD', 'LON'], 
-    	help = "Cloud Servers region to connect to.")
+    parser.add_argument("-r", "--region", help = "Cloud Servers region to " 
+        "connect to.  Menu provided if absent.")
     parser.add_argument("-b", "--base", required = True, 
         help = "Base name for servers.")
     parser.add_argument("-n", "--number", type = int, default = 3, 
@@ -154,6 +154,9 @@ def main():
     pyrax.set_setting("identity_type", "rackspace")
     creds_file = os.path.abspath(os.path.expanduser(args.creds_file)) 
     pyrax.set_credential_file(creds_file)
+
+    while args.region not in pyrax.regions:
+        args.region = raw_input('Please supply a valid region.\n[' + ' '.join(list(pyrax.regions)) + ']: ')
 
     cs = pyrax.connect_to_cloudservers(region = args.region)
 
@@ -175,8 +178,15 @@ def main():
         if image == None or len(image) < 1:
             image = choose_image(cs, "Image matching '{}' not found." 
                 "  Select image: ".format(args.image_name))
-        else:
+        elif len(image) == 1:
             image = image[0]
+        else:
+            for index, img in enumerate(image):
+                print index, img.name
+            choice = -1
+            while choice < 0 or choice > len(image) - 1:
+                choice = raw_input("Choose a specific image: ")
+            image = image[choice]
 
     servers = []
     for i in range(1, args.number + 1):
