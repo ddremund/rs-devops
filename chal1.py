@@ -36,8 +36,6 @@ def main():
 	image = make_choice(available_images, "Select an image: ")
 	flavor = make_choice(available_flavors, "Select a flavor: ")
 
-	print image
-	print flavor
 
 	base_name = raw_input("Base server name: ")
 	server_count = int(raw_input("Number of servers to build: "))
